@@ -1,5 +1,6 @@
 #!/usr/local/bin/zsh
 
+# Temporary workflow trigger marker for CI verification.
 emulate -L zsh
 set -euo pipefail
 
