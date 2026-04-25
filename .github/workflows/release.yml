@@ -6,13 +6,12 @@ on:
       - 'v*'
 
 permissions:
-  id-token: write  # Required for NPM OIDC
   contents: write
-  packages: write
 
 jobs:
-  goreleaser:
-    runs-on: ubuntu-latest
+  release:
+    name: macOS Big Sur Release
+    runs-on: macos-15-intel
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -22,7 +21,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.26'
+          go-version: '1.24.8'
           cache: true
 
       - name: Install Task
@@ -31,7 +30,7 @@ jobs:
       - name: Run sanity checks and tests
         run: task ci
 
-      - name: Run GoReleaser
+      - name: Run GoReleaser for macOS Big Sur
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
@@ -39,20 +38,4 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_PAT: ${{ secrets.GH_PAT }}
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Extract version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Update package.json version
-        run: npm version ${{ steps.version.outputs.VERSION }} --no-git-tag-version
-
-      - name: Publish to npm
-        run: NODE_AUTH_TOKEN="" npm publish
+          MACOSX_DEPLOYMENT_TARGET: "11.0"

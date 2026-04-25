@@ -4,6 +4,9 @@ dist/
 notes/
 debug/
 completions/
+tmp/
+AGENTS.md
+.venv/
 
 # Test coverage
 coverage.out

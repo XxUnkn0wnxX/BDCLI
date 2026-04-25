@@ -1,11 +1,12 @@
 # BetterDiscord CLI
 
-[![Go Version](https://img.shields.io/github/go-mod/go-version/BetterDiscord/cli)](https://go.dev/)
-[![Release](https://img.shields.io/github/v/release/BetterDiscord/cli)](https://github.com/BetterDiscord/cli/releases)
-[![License](https://img.shields.io/github/license/BetterDiscord/cli)](LICENSE)
-[![npm](https://img.shields.io/npm/v/@betterdiscord/cli)](https://www.npmjs.com/package/@betterdiscord/cli)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/XxUnkn0wnxX/BDCLI)](https://go.dev/)
+[![Release](https://img.shields.io/github/v/release/XxUnkn0wnxX/BDCLI)](https://github.com/XxUnkn0wnxX/BDCLI/releases)
+[![License](https://img.shields.io/github/license/XxUnkn0wnxX/BDCLI)](LICENSE)
 
-A cross-platform command-line interface for installing, updating, and managing [BetterDiscord](https://betterdiscord.app/).
+A fork of BetterDiscord CLI focused on keeping the tool usable on older Intel Macs that are limited to macOS 11 Big Sur.
+
+This fork is for older Intel Macs that are limited to macOS 11 Big Sur. It does not target Windows or Linux.
 
 ## Features
 
@@ -14,39 +15,22 @@ A cross-platform command-line interface for installing, updating, and managing [
 - 🧭 Discover Discord installs and suggested paths
 - 🧩 Manage plugins and themes (list, install, update, remove)
 - 🛒 Browse and search the BetterDiscord store
-- 🖥️ Cross-platform support (Windows, macOS, Linux)
-- 📦 Available via npm for easy distribution
+- 🍎 Focused on macOS Big Sur-compatible Intel Mac builds
 - ⚡ Fast and lightweight Go binary
 
 ## Installation
 
-### Via npm (Recommended)
+### Clone And Build Locally
 
 ```bash
-npm install -g @betterdiscord/cli
-```
-
-### Via Go
-
-```bash
-go install github.com/betterdiscord/cli@latest
-```
-
-### Via winget (Windows)
-
-```bash
-winget install betterdiscord.cli
-```
-
-### Via Homebrew/Linuxbrew
-
-```bash
-brew install betterdiscord/tap/bdcli
+git clone https://github.com/XxUnkn0wnxX/BDCLI.git
+cd BDCLI
+CGO_ENABLED=0 go build -o dist/bdcli ./main.go
 ```
 
 ### Download Binary
 
-Download the latest release for your platform from the [releases page](https://github.com/BetterDiscord/cli/releases).
+Download the latest Big Sur Intel build from the [releases page](https://github.com/XxUnkn0wnxX/BDCLI/releases).
 
 ## Usage
 
@@ -194,7 +178,7 @@ BDCLI_SILENT=1 bdcli update
 ### CLI Help Output
 
 ```
-A cross-platform CLI for installing, updating, and managing BetterDiscord.
+A macOS Big Sur-focused CLI for installing, updating, and managing BetterDiscord on older Intel Macs.
 
 Usage:
    bdcli [flags]
@@ -222,15 +206,13 @@ Use "bdcli [command] --help" for more information about a command.
 
 ## Supported Platforms
 
-- **Windows** (x64, ARM64, x86)
-- **macOS** (x64, ARM64/M1/M2)
-- **Linux** (x64, ARM64, ARM)
+- **macOS 11 Big Sur** (x64 / Intel)
 
 ## Development
 
 ### Prerequisites
 
-- [Go](https://go.dev/) 1.26 or higher
+- [Go](https://go.dev/) 1.24.x
 - [Task](https://taskfile.dev/) (optional, for task automation)
 - [GoReleaser](https://goreleaser.com/) (for releases)
 
@@ -239,8 +221,8 @@ Use "bdcli [command] --help" for more information about a command.
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/BetterDiscord/cli.git
-cd cli
+git clone https://github.com/XxUnkn0wnxX/BDCLI.git
+cd BDCLI
 task setup  # Or: go mod download
 ```
 
@@ -254,7 +236,7 @@ task run             # Run the CLI (pass args with: task run -- install stable)
 
 # Building
 task build           # Build for current platform
-task build:all       # Build for all platforms (GoReleaser)
+task build:all       # Build macOS Big Sur release artifacts (GoReleaser)
 
 # Testing
 task test            # Run tests
@@ -292,7 +274,7 @@ task run -- install stable
 # Build for current platform
 task build
 
-# Build for all platforms
+# Build macOS Big Sur release artifacts
 task build:all
 
 # Output will be in ./dist/
@@ -317,15 +299,9 @@ task coverage
    git push origin v0.2.0
    ```
 
-2. GitHub Actions will automatically build and create a draft release
+2. GitHub Actions will automatically build macOS Big Sur Intel release assets
 
-3. Edit the release notes and publish
-
-4. Publish to npm:
-
-   ```bash
-   npm publish
-   ```
+3. Review the GitHub release assets and notes
 
 ## Project Structure
 
@@ -370,8 +346,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 - [BetterDiscord Website](https://betterdiscord.app/)
 - [BetterDiscord Documentation](https://docs.betterdiscord.app/)
-- [Issue Tracker](https://github.com/BetterDiscord/cli/issues)
-- [npm Package](https://www.npmjs.com/package/@betterdiscord/cli)
+- [Issue Tracker](https://github.com/XxUnkn0wnxX/BDCLI/issues)
 
 ## Acknowledgments
 

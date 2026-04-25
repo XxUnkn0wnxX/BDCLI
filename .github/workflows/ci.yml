@@ -2,13 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
-  test-and-lint:
-    runs-on: ubuntu-latest
+  macos-big-sur:
+    name: macOS Big Sur CI
+    runs-on: macos-15-intel
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -16,7 +17,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.26'
+          go-version: '1.24.8'
           cache: true
 
       - name: Install Task
@@ -31,3 +32,17 @@ jobs:
           version: latest
           args: --timeout=5m
 
+      - name: Build macOS 11 Intel binary
+        env:
+          CGO_ENABLED: "0"
+          MACOSX_DEPLOYMENT_TARGET: "11.0"
+        run: |
+          mkdir -p dist
+          GOOS=darwin GOARCH=amd64 GOAMD64=v1 go build -trimpath -o dist/bdcli-darwin-amd64-macos11 ./main.go
+          ./dist/bdcli-darwin-amd64-macos11 version
+
+      - name: Upload macOS 11 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bdcli-darwin-amd64-macos11-snapshot
+          path: dist/bdcli-darwin-amd64-macos11

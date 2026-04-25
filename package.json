@@ -1,7 +1,7 @@
 {
   "name": "@betterdiscord/cli",
   "version": "0.0.0",
-  "description": "A cross-platform CLI for managing BetterDiscord",
+  "description": "A macOS Big Sur-focused CLI for managing BetterDiscord on older Intel Macs",
   "main": "index.js",
   "keywords": ["discord", "betterdiscord", "cli", "tool", "installer"],
   "publishConfig": {
@@ -14,20 +14,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BetterDiscord/cli.git"
+    "url": "git+https://github.com/XxUnkn0wnxX/BDCLI.git"
   },
   "author": "BetterDiscord Team",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/BetterDiscord/cli/issues"
+    "url": "https://github.com/XxUnkn0wnxX/BDCLI/issues"
   },
-  "homepage": "https://github.com/BetterDiscord/cli#readme",
+  "homepage": "https://github.com/XxUnkn0wnxX/BDCLI#readme",
   "dependencies": {
     "@go-task/go-npm": "^0.2.0"
   },
   "goBinary": {
     "name": "bdcli",
     "path": "./bin",
-    "url": "https://github.com/BetterDiscord/cli/releases/download/v{{version}}/bdcli_{{version}}_{{platform}}_{{arch}}{{archive_ext}}"
+    "url": "https://github.com/XxUnkn0wnxX/BDCLI/releases/download/v{{version}}/bdcli_{{version}}_{{platform}}_{{arch}}_macos11{{archive_ext}}"
   }
 }

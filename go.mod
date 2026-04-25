@@ -1,6 +1,8 @@
 module github.com/betterdiscord/cli
 
-go 1.26
+go 1.24.0
+
+toolchain go1.24.8
 
 require (
 	github.com/shirou/gopsutil/v3 v3.24.5
