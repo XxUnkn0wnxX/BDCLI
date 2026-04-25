@@ -30,7 +30,7 @@ cd BDCLI
 
 That script builds the macOS 11 Big Sur Intel binary and a commit-named archive under `dist/`.
 
-If you want to use the Homebrew formula example in [scripts/bdcli.rb](/Users/ovidijus/Apps/Dev/BD/BDCLI/scripts/bdcli.rb), note that it currently points at a custom Go formula for this machine. For normal use, change the dependency to `depends_on "go" => :build`, or point it at your own older Go formula if you need a Big Sur-compatible toolchain.
+If you want to use the Homebrew formula example in [brewfiles/bdcli.rb](/Users/ovidijus/Apps/Dev/BD/BDCLI/brewfiles/bdcli.rb), note that it currently points at a custom Go formula for this machine. For normal use, change the dependency to `depends_on "go" => :build`, or point it at your own older Go formula if you need a Big Sur-compatible toolchain.
 
 ### Download Binary
 

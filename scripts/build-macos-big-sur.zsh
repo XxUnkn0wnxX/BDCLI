@@ -16,6 +16,19 @@ fi
 
 cd "$repo_root"
 
+if [[ -x /usr/local/bin/zsh && -f "$HOME/.zshrc" ]]; then
+  zsh_path="$(
+    /usr/local/bin/zsh -i -c 'printf %s "$PATH"' 2>/dev/null || true
+  )"
+  if [[ -n "$zsh_path" ]]; then
+    export PATH="$zsh_path"
+  fi
+fi
+
+if [[ -x /usr/local/opt/go/bin/go ]]; then
+  export PATH="/usr/local/opt/go/bin:$PATH"
+fi
+
 if ! command -v go >/dev/null 2>&1; then
   echo "go is not installed or not in PATH" >&2
   exit 1
