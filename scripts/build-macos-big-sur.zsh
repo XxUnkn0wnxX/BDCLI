@@ -16,18 +16,16 @@ fi
 
 cd "$repo_root"
 
-if [[ -x /usr/local/bin/zsh && -f "$HOME/.zshrc" ]]; then
-  zsh_path="$(
-    /usr/local/bin/zsh -i -c 'printf %s "$PATH"' 2>/dev/null || true
-  )"
-  if [[ -n "$zsh_path" ]]; then
-    export PATH="$zsh_path"
-  fi
+# Initialize a sane macOS PATH without relying on the user's shell rc files.
+if [[ -x /usr/libexec/path_helper ]]; then
+  eval "$(/usr/libexec/path_helper -s)"
 fi
 
-if [[ -x /usr/local/opt/go/bin/go ]]; then
-  export PATH="/usr/local/opt/go/bin:$PATH"
-fi
+for path_dir in /usr/local/bin /opt/homebrew/bin /usr/local/opt/go/bin /opt/homebrew/opt/go/bin; do
+  if [[ -d "$path_dir" && ":$PATH:" != *":$path_dir:"* ]]; then
+    export PATH="$path_dir:$PATH"
+  fi
+done
 
 if ! command -v go >/dev/null 2>&1; then
   echo "go is not installed or not in PATH" >&2
