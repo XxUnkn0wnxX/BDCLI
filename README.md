@@ -20,30 +20,35 @@ This fork is for older Intel Macs that are limited to macOS 11 Big Sur. It does 
 
 ## Installation
 
-### Clone And Build Locally
-
-```bash
-git clone https://github.com/XxUnkn0wnxX/BDCLI.git
-cd BDCLI
-./scripts/build-macos-big-sur.zsh
-```
-
-That script builds the macOS 11 Big Sur Intel binary and a commit-named archive under `dist/`.
-
 ### Install With Homebrew
 
-This fork can also be installed from the `xxunkn0wnxx/tap` Homebrew tap:
+The recommended install path is the `xxunkn0wnxx/tap` Homebrew tap:
 
 ```bash
 brew tap xxunkn0wnxx/tap
 brew install -sv xxunkn0wnxx/tap/bdcli
 ```
 
-The tap formula builds `bdcli` from this fork's `main` branch and uses the tap-local Big Sur-compatible Go formula as its build dependency.
+The tap formula builds `bdcli` from this fork's `main` branch. It builds from source and uses the tap-local Big Sur-compatible Go formula as its build dependency.
 
-For local Homebrew setup, formula usage, and install management, see [docs/homebrew-big-sur.md](docs/homebrew-big-sur.md).
+To update or remove the Homebrew install:
 
-### Download Binary
+```bash
+brew reinstall -sv xxunkn0wnxx/tap/bdcli
+brew uninstall xxunkn0wnxx/tap/bdcli
+```
+
+### Clone And Build Locally
+
+```bash
+git clone https://github.com/XxUnkn0wnxX/BDCLI.git
+cd BDCLI
+./scripts/build-macos.zsh
+```
+
+That script builds the macOS 11 Big Sur Intel binary and a commit-named archive under `dist/`.
+
+### Download Workflow Artifact
 
 Download the latest Big Sur Intel build artifact from the `main` branch workflow runs.
 
@@ -194,35 +199,6 @@ bdcli --silent install --channel stable
 BDCLI_SILENT=1 bdcli update
 ```
 
-### CLI Help Output
-
-```
-A macOS Big Sur-focused CLI for installing, updating, and managing BetterDiscord on older Intel Macs.
-
-Usage:
-   bdcli [flags]
-   bdcli [command]
-
-Available Commands:
-   completion  Generate shell completions
-   discover    Discover Discord installations and related data
-   help        Help about any command
-   info        Displays information about BetterDiscord installation
-   install     Installs BetterDiscord to your Discord
-   plugins     Manage BetterDiscord plugins
-   store       Browse and search the BetterDiscord store
-   themes      Manage BetterDiscord themes
-   uninstall   Uninstalls BetterDiscord from your Discord
-   update      Update BetterDiscord to the latest version
-   version     Print the version number
-
-Flags:
-       --silent   Suppress non-error output
-   -h, --help     help for bdcli
-
-Use "bdcli [command] --help" for more information about a command.
-```
-
 ## Supported Platforms
 
 - **macOS 11 Big Sur** (x64 / Intel)
@@ -370,4 +346,4 @@ Built with:
 
 ---
 
-Made with ❤️ by the BetterDiscord Team
+Originally based on BetterDiscord CLI.
