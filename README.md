@@ -1,6 +1,6 @@
 # BetterDiscord CLI
 
-[![Go Version](https://img.shields.io/github/go-mod/go-version/XxUnkn0wnxX/BDCLI)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/Go-1.24.x-00ADD8?logo=go&logoColor=white)](https://github.com/XxUnkn0wnxX/BDCLI/blob/develop/go.mod)
 [![Release](https://img.shields.io/github/v/release/XxUnkn0wnxX/BDCLI)](https://github.com/XxUnkn0wnxX/BDCLI/releases)
 [![License](https://img.shields.io/github/license/XxUnkn0wnxX/BDCLI)](LICENSE)
 
@@ -25,12 +25,16 @@ This fork is for older Intel Macs that are limited to macOS 11 Big Sur. It does 
 ```bash
 git clone https://github.com/XxUnkn0wnxX/BDCLI.git
 cd BDCLI
-CGO_ENABLED=0 go build -o dist/bdcli ./main.go
+mkdir -p dist
+CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 GOAMD64=v1 MACOSX_DEPLOYMENT_TARGET=11.0 \
+  go build -trimpath -o dist/bdcli ./main.go
 ```
 
 ### Download Binary
 
 Download the latest Big Sur Intel build from the [releases page](https://github.com/XxUnkn0wnxX/BDCLI/releases).
+
+GitHub Actions for this fork build macOS Big Sur Intel release binaries only.
 
 ## Usage
 
