@@ -2,21 +2,28 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+    paths:
+      - 'cmd/**'
+      - 'internal/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+      - 'main.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Taskfile.yml'
+      - '.goreleaser.yaml'
 
 permissions:
-  contents: write
+  actions: read
 
 jobs:
   release:
-    name: macOS Big Sur Release
+    name: macOS Big Sur Commit Artifact
     runs-on: macos-15-intel
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -24,18 +31,29 @@ jobs:
           go-version: '1.24.8'
           cache: true
 
-      - name: Install Task
-        uses: go-task/setup-task@v1
+      - name: Generate shell completions
+        run: sh ./scripts/completions.sh
 
-      - name: Run sanity checks and tests
-        run: task ci
-
-      - name: Run GoReleaser for macOS Big Sur
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --clean
+      - name: Build commit-named macOS 11 artifact
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CGO_ENABLED: "0"
           MACOSX_DEPLOYMENT_TARGET: "11.0"
+        run: |
+          mkdir -p dist/archive/completions
+          SHORT_SHA="$(git rev-parse --short HEAD)"
+          BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          go build \
+            -trimpath \
+            -ldflags "-s -w -X main.version=${SHORT_SHA} -X main.commit=${SHORT_SHA} -X main.date=${BUILD_DATE}" \
+            -o dist/archive/bdcli \
+            ./main.go
+          cp README.md LICENSE dist/archive/
+          cp completions/* dist/archive/completions/
+          tar -C dist/archive -czf "dist/bdcli_${SHORT_SHA}_darwin_amd64_macos11.tar.gz" .
+          ls -l "dist/bdcli_${SHORT_SHA}_darwin_amd64_macos11.tar.gz"
+
+      - name: Upload commit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bdcli-darwin-amd64-macos11-${{ github.sha }}
+          path: dist/bdcli_*_darwin_amd64_macos11.tar.gz

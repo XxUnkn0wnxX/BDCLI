@@ -138,9 +138,9 @@ tasks:
 
   # Release tasks
   release:
-    desc: Create a new release (runs GoReleaser)
+    desc: Build a local macOS Big Sur artifact bundle
     cmds:
-      - goreleaser release --clean
+      - task: release:test
     preconditions:
       - sh: command -v goreleaser
         msg: 'goreleaser not installed. See: https://goreleaser.com/install/'
@@ -148,14 +148,14 @@ tasks:
         msg: 'Git working directory is not clean. Commit or stash changes first.'
 
   release:snapshot:
-    desc: Create a snapshot release (no publish)
+    desc: Build a snapshot macOS Big Sur artifact with GoReleaser
     cmds:
-      - goreleaser release --snapshot --clean --skip=publish
+      - goreleaser build --snapshot --clean
 
   release:test:
-    desc: Test the release process without publishing
+    desc: Build a local macOS Big Sur artifact bundle
     cmds:
-      - goreleaser release --skip=publish --clean
+      - goreleaser build --snapshot --clean
 
   # CI/CD tasks
   ci:

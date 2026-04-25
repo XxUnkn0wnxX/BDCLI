@@ -1,7 +1,7 @@
 # BetterDiscord CLI
 
 [![Go Version](https://img.shields.io/badge/Go-1.24.x-00ADD8?logo=go&logoColor=white)](https://github.com/XxUnkn0wnxX/BDCLI/blob/develop/go.mod)
-[![Release](https://img.shields.io/github/v/release/XxUnkn0wnxX/BDCLI)](https://github.com/XxUnkn0wnxX/BDCLI/releases)
+[![Main Artifact](https://img.shields.io/github/actions/workflow/status/XxUnkn0wnxX/BDCLI/release.yml?branch=main&label=Main%20Artifact)](https://github.com/XxUnkn0wnxX/BDCLI/actions/workflows/release.yml)
 [![License](https://img.shields.io/github/license/XxUnkn0wnxX/BDCLI)](LICENSE)
 
 A fork of BetterDiscord CLI focused on keeping the tool usable on older Intel Macs that are limited to macOS 11 Big Sur.
@@ -32,9 +32,11 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 GOAMD64=v1 MACOSX_DEPLOYMENT_TARGET=11.0 
 
 ### Download Binary
 
-Download the latest Big Sur Intel build from the [releases page](https://github.com/XxUnkn0wnxX/BDCLI/releases).
+Download the latest Big Sur Intel build artifact from the `main` branch workflow runs.
 
-GitHub Actions for this fork build macOS Big Sur Intel release binaries only.
+GitHub Actions for this fork build macOS Big Sur Intel binaries only.
+Pushes to `develop` run checks only.
+Pushes to `main` run checks and upload a commit-named Big Sur artifact.
 
 ## Usage
 
@@ -256,7 +258,7 @@ task check           # Run fix, fmt, vet, lint, test
 
 # Release
 task release:snapshot # Test release build
-task release          # Create release (requires tag)
+task release          # Build a local Big Sur artifact bundle
 
 # Cleaning
 task clean           # Remove build and debug artifacts
@@ -294,18 +296,11 @@ task test
 task coverage
 ```
 
-### Releasing
+### Main Branch Artifacts
 
-1. Create and push a new tag:
-
-   ```bash
-   git tag -a v0.2.0 -m "Release v0.2.0"
-   git push origin v0.2.0
-   ```
-
-2. GitHub Actions will automatically build macOS Big Sur Intel release assets
-
-3. Review the GitHub release assets and notes
+1. Push code changes to `main`
+2. GitHub Actions will run checks and build a macOS Big Sur Intel artifact
+3. Download the commit-named artifact from the workflow run
 
 ## Project Structure
 
