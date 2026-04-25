@@ -1,5 +1,6 @@
 #!/usr/local/bin/zsh
 
+# Temporary main-branch workflow trigger marker.
 emulate -L zsh
 set -euo pipefail
 
