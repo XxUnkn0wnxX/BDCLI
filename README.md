@@ -26,15 +26,15 @@ The recommended install path is the `xxunkn0wnxx/tap` Homebrew tap:
 
 ```bash
 brew tap xxunkn0wnxx/tap
-brew install -sv xxunkn0wnxx/tap/bdcli
+brew install --HEAD -sv xxunkn0wnxx/tap/bdcli
 ```
 
-The tap formula builds `bdcli` from this fork's `main` branch. It builds from source and uses the tap-local Big Sur-compatible Go formula as its build dependency.
+The tap formula is HEAD-only. It builds `bdcli` from this fork's `main` branch, builds from source, and uses the tap-local Big Sur-compatible Go formula as its build dependency.
 
 To update or remove the Homebrew install:
 
 ```bash
-brew reinstall -sv xxunkn0wnxx/tap/bdcli
+brew reinstall --HEAD -sv xxunkn0wnxx/tap/bdcli
 brew uninstall xxunkn0wnxx/tap/bdcli
 ```
 
