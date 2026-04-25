@@ -7,8 +7,8 @@ This fork includes example Homebrew formula files under:
 
 The intended use is:
 
-- install the preserved `go.rb` formula as the Big Sur-compatible Go toolchain
-- install the `bdcli.rb` formula against that Go toolchain
+- install the `bdcli.rb` formula from your local BDCLI tap
+- install the bundled `go.rb` formula from that same tap as the Big Sur-compatible Go toolchain
 
 This guide is for local taps on macOS. It does not modify Homebrew core and it does not require publishing a tap to GitHub.
 
@@ -55,34 +55,34 @@ $(brew --repository)/Library/Taps/xxunkn0wnxx/homebrew-bdcli
 The bundled `bdcli.rb` currently uses:
 
 ```ruby
-depends_on "custom/versions/go" => :build
+depends_on "xxunkn0wnxx/bdcli/go" => :build
 ```
 
-That matches the custom tap layout on this machine.
+That makes `bdcli` build against the `go.rb` formula in the same local tap.
 
-For most users, edit the copied `Formula/bdcli.rb` and change that line to:
+If you want to build against standard Homebrew Go instead, edit the copied `Formula/bdcli.rb` and change that line to:
 
 ```ruby
 depends_on "go" => :build
 ```
 
-If you specifically want to use the bundled Big Sur-compatible Go formula you just copied into your local tap, change it to:
-
-```ruby
-depends_on "xxunkn0wnxx/bdcli/go" => :build
-```
-
-That makes `bdcli` build against the local tap’s `go.rb`, which is the preserved Go `1.24.8` formula that still works on Big Sur.
+For the Big Sur-focused setup in this repo, the default is the tap-local `go.rb` formula.
 
 ## 4. Install The Big Sur Go Toolchain
 
-If you chose to use the bundled Go formula from the tap, install it first:
+For the default tap-local setup, install the bundled Go formula first:
 
 ```bash
 brew install -sv xxunkn0wnxx/bdcli/go
 ```
 
-Verify it:
+If you changed `bdcli.rb` to use standard Homebrew Go instead, install that instead:
+
+```bash
+brew install -sv go
+```
+
+Verify the active Go toolchain:
 
 ```bash
 go version
@@ -139,7 +139,7 @@ brew uninstall bdcli
 If you also installed the tap-local Go formula and no longer want it:
 
 ```bash
-brew uninstall go
+brew uninstall xxunkn0wnxx/bdcli/go
 ```
 
 If you want to remove the entire local tap:
@@ -150,7 +150,7 @@ brew untap xxunkn0wnxx/bdcli
 
 ## Notes
 
-- `brewfiles/go.rb` is the latest Go formula in this repo that still works on Big Sur.
+- `brewfiles/go.rb` is the preserved Go formula in this repo that still works on Big Sur.
 - `brewfiles/bdcli.rb` is an example formula file for this fork, not an automatically published tap.
 - If you do not want to involve Homebrew at all, the simplest local build path is still:
 

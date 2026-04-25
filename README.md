@@ -30,9 +30,18 @@ cd BDCLI
 
 That script builds the macOS 11 Big Sur Intel binary and a commit-named archive under `dist/`.
 
-If you want to use the Homebrew formula example in [brewfiles/bdcli.rb](/Users/ovidijus/Apps/Dev/BD/BDCLI/brewfiles/bdcli.rb), note that it currently points at a custom Go formula for this machine. For normal use, change the dependency to `depends_on "go" => :build`, or point it at your own older Go formula if you need a Big Sur-compatible toolchain.
+### Install With Homebrew
 
-For a full local tap setup guide, see [docs/homebrew-big-sur.md](docs/homebrew-big-sur.md).
+This fork can also be installed from the `xxunkn0wnxx/tap` Homebrew tap:
+
+```bash
+brew tap xxunkn0wnxx/tap
+brew install -sv xxunkn0wnxx/tap/bdcli
+```
+
+The tap formula builds `bdcli` from this fork's `main` branch and uses the tap-local Big Sur-compatible Go formula as its build dependency.
+
+For local Homebrew setup, formula usage, and install management, see [docs/homebrew-big-sur.md](docs/homebrew-big-sur.md).
 
 ### Download Binary
 

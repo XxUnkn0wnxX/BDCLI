@@ -4,7 +4,7 @@ class Bdcli < Formula
   license "Apache-2.0"
   head "https://github.com/XxUnkn0wnxX/BDCLI.git", branch: "main"
 
-  depends_on "custom/versions/go" => :build
+  depends_on "xxunkn0wnxx/bdcli/go" => :build
 
   def install
     ENV["CGO_ENABLED"] = "0"
