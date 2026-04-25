@@ -13,6 +13,12 @@ if ! command -v go >/dev/null 2>&1; then
   exit 1
 fi
 
+echo "Using repository root: $repo_root"
+echo "Using Go binary: $(command -v go)"
+go version
+
+set -x
+
 short_sha="$(git rev-parse --short HEAD 2>/dev/null || echo manual)"
 if ! git diff-index --quiet HEAD -- 2>/dev/null; then
   short_sha="${short_sha}-dirty"
@@ -29,7 +35,7 @@ rm -rf "$archive_root"
 mkdir -p dist "$archive_root/completions"
 
 echo "Generating shell completions..."
-sh ./scripts/completions.sh
+sh -x ./scripts/completions.sh
 
 echo "Building macOS 11 Big Sur Intel binary..."
 CGO_ENABLED=0 \
@@ -38,6 +44,8 @@ GOARCH=amd64 \
 GOAMD64=v1 \
 MACOSX_DEPLOYMENT_TARGET=11.0 \
 go build \
+  -x \
+  -v \
   -trimpath \
   -ldflags "-s -w -X main.version=${short_sha} -X main.commit=${short_sha} -X main.date=${build_date}" \
   -o "$binary_path" \
@@ -46,10 +54,12 @@ go build \
 cp "$binary_path" "$archive_root/bdcli"
 cp README.md LICENSE "$archive_root/"
 cp completions/* "$archive_root/completions/"
+ls -l "$binary_path" "$archive_root/bdcli" "$archive_root/completions"
 
 echo "Creating artifact archive..."
-tar -C "$archive_root" -czf "$artifact_path" .
+tar -C "$archive_root" -cvzf "$artifact_path" .
 
+set +x
 echo "Build complete."
 echo "Binary:   $binary_path"
 echo "Artifact: $artifact_path"
