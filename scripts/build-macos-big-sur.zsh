@@ -4,7 +4,15 @@ emulate -L zsh
 set -euo pipefail
 
 script_dir="${0:A:h}"
-repo_root="${script_dir:h}"
+
+if [[ -f "${script_dir}/go.mod" && -f "${script_dir}/main.go" ]]; then
+  repo_root="${script_dir}"
+elif [[ -f "${script_dir:h}/go.mod" && -f "${script_dir:h}/main.go" ]]; then
+  repo_root="${script_dir:h}"
+else
+  echo "Could not detect repository root from script location: ${script_dir}" >&2
+  exit 1
+fi
 
 cd "$repo_root"
 
