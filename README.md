@@ -48,13 +48,13 @@ cd BDCLI
 
 That script builds the macOS 11 Big Sur Intel binary and a commit-named archive under `dist/`.
 
-### Download Workflow Artifact
+### Download Release
 
-Download the latest Big Sur Intel build artifact from the `main` branch workflow runs.
+Download the latest Big Sur Intel binary from the GitHub Releases page, or use the workflow artifact from the matching `main` run if you want the Actions artifact copy.
 
 GitHub Actions for this fork build macOS Big Sur Intel binaries only.
 Pushes to `develop` run checks only.
-Pushes to `main` run checks and upload a commit-named Big Sur artifact.
+Pushes to `main` run checks, upload the macOS binary as a workflow artifact, and replace the single rolling GitHub release with the latest macOS binary. GitHub also provides the source code archives for that release tag.
 
 ## Usage
 
@@ -288,8 +288,8 @@ task coverage
 ### Main Branch Artifacts
 
 1. Push code changes to `main`
-2. GitHub Actions will run checks and build a macOS Big Sur Intel artifact
-3. Download the commit-named artifact from the workflow run
+2. GitHub Actions will run checks, upload the macOS binary as a workflow artifact, and replace the rolling GitHub release
+3. Download the macOS binary from the GitHub Releases page or from the workflow artifact
 
 ## Project Structure
 
