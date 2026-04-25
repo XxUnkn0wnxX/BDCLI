@@ -25,10 +25,10 @@ This fork is for older Intel Macs that are limited to macOS 11 Big Sur. It does 
 ```bash
 git clone https://github.com/XxUnkn0wnxX/BDCLI.git
 cd BDCLI
-mkdir -p dist
-CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 GOAMD64=v1 MACOSX_DEPLOYMENT_TARGET=11.0 \
-  go build -trimpath -o dist/bdcli ./main.go
+./scripts/build-macos-big-sur.zsh
 ```
+
+That script builds the macOS 11 Big Sur Intel binary and a commit-named archive under `dist/`.
 
 ### Download Binary
 
