@@ -13,6 +13,7 @@ on:
       - 'go.sum'
       - 'Taskfile.yml'
       - '.goreleaser.yaml'
+  workflow_dispatch:
 
 permissions:
   contents: write
