@@ -87,7 +87,8 @@ func validateWindowsStyleInstall(proposed string) *DiscordInstall {
 }
 
 // validateUnixStyleInstall validates a Unix-style Discord installation path (Linux native, macOS).
-// Unix Discord has a flatter structure: discord/0.0.35/modules/discord_desktop_core
+// Unix Discord sometimes has a flatter structure: discord/0.0.35/modules/discord_desktop_core
+// But sometimes it has the same pattern as Windows. This function detects both patterns and also identifies Flatpak and Snap installations if requested.
 func validateUnixStyleInstall(proposed string, detectFlatpak bool, detectSnap bool) *DiscordInstall {
 	var finalPath = ""
 	var selected = filepath.Base(proposed)
@@ -107,16 +108,51 @@ func validateUnixStyleInstall(proposed string, detectFlatpak bool, detectSnap bo
 		}
 		sort.Slice(candidates, func(i, j int) bool { return candidates[i].Name() < candidates[j].Name() })
 		versionDir := candidates[len(candidates)-1].Name()
-		finalPath = filepath.Join(proposed, versionDir, "modules", "discord_desktop_core")
+
+		// Get core wrap like discord_desktop_core-1
+		dFiles, err = os.ReadDir(filepath.Join(proposed, versionDir, "modules"))
+		if err != nil {
+			return nil
+		}
+		candidates = utils.Filter(dFiles, func(file fs.DirEntry) bool {
+			return file.IsDir() && strings.HasPrefix(file.Name(), "discord_desktop_core")
+		})
+
+		if len(candidates) == 0 {
+			return nil
+		}
+
+		// If no core wrap is found, assume the structure is flatter and point directly to discord_desktop_core
+		coreWrap := candidates[len(candidates)-1].Name()
+		if coreWrap == "discord_desktop_core" {
+			finalPath = filepath.Join(proposed, versionDir, "modules", "discord_desktop_core")
+		} else {
+			finalPath = filepath.Join(proposed, versionDir, "modules", coreWrap, "discord_desktop_core")
+		}
 	}
 
-	// Handle version directories (e.g., 0.0.35)
-	if len(strings.Split(selected, ".")) == 3 {
-		finalPath = filepath.Join(proposed, "modules", "discord_desktop_core")
-	}
+	// Handle version directories (e.g. app-0.0.35, 0.0.35)
+	if strings.HasPrefix(selected, "app-") || versionRegex.MatchString(selected) {
+		dFiles, err := os.ReadDir(filepath.Join(proposed, "modules"))
+		if err != nil {
+			return nil
+		}
 
-	if selected == "modules" {
-		finalPath = filepath.Join(proposed, "discord_desktop_core")
+		candidates := utils.Filter(dFiles, func(file fs.DirEntry) bool {
+			return file.IsDir() && strings.HasPrefix(file.Name(), "discord_desktop_core")
+		})
+
+		if len(candidates) == 0 {
+			return nil
+		}
+
+		// If no core wrap is found, assume the structure is flatter and point directly to discord_desktop_core
+		coreWrap := candidates[len(candidates)-1].Name()
+		if coreWrap == "discord_desktop_core" {
+			finalPath = filepath.Join(proposed, "modules", "discord_desktop_core")
+		} else {
+			finalPath = filepath.Join(proposed, "modules", coreWrap, "discord_desktop_core")
+		}
 	}
 
 	if selected == "discord_desktop_core" {

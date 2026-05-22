@@ -108,10 +108,10 @@ homebrew_casks:
     homepage: "https://betterdiscord.app/"
     license: "Apache-2.0"
     binaries: [bdcli]
-    completions:
-      bash: "completions/bdcli.bash"
-      zsh: "completions/bdcli.zsh"
-      fish: "completions/bdcli.fish"
+    generate_completions_from_executable:
+      args: [completion]
+      shell_parameter_format: cobra
+      shells: [bash, zsh, fish, pwsh]
     commit_author:
       name: zerebos
       email: 6865942+zerebos@users.noreply.github.com
