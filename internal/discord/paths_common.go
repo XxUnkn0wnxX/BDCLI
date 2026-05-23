@@ -93,6 +93,32 @@ func validateUnixStyleInstall(proposed string, detectFlatpak bool, detectSnap bo
 	var finalPath = ""
 	var selected = filepath.Base(proposed)
 
+	// Flatpak specific handling
+	if strings.HasPrefix(selected, "com.discordapp") {
+		channelPaths, err := os.ReadDir(filepath.Join(proposed, "config"))
+		if err != nil {
+			return nil
+		}
+
+		candidates := utils.Filter(channelPaths, func(file fs.DirEntry) bool {
+			return file.IsDir() && strings.HasPrefix(file.Name(), "discord")
+		})
+
+		if len(candidates) == 0 {
+			return nil
+		}
+
+		// Assume the first candidate is the correct one (e.g., discord or discordcanary)
+		// Then set proposed and select so the remaining logic can find the core.asar
+		//
+		// TODO: This entire validation function could be refactored to use this fall-through logic
+		// instead of trying to fully handle each pattern, but for now this is a simple way to support
+		// Flatpak's extra nesting without breaking existing validations
+		channelPath := candidates[0].Name()
+		proposed = filepath.Join(proposed, "config", channelPath)
+		selected = channelPath
+	}
+
 	if strings.HasPrefix(strings.ToLower(selected), "discord") {
 		// Get version dir like 0.0.35
 		dFiles, err := os.ReadDir(proposed)
