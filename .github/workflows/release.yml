@@ -56,4 +56,4 @@ jobs:
         run: npm version ${{ steps.version.outputs.VERSION }} --no-git-tag-version
 
       - name: Publish to npm
-        run: npm publish
+        run: npm publish --provenance --access public
