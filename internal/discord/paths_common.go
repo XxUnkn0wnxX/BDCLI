@@ -88,7 +88,8 @@ func validateWindowsStyleInstall(proposed string) *DiscordInstall {
 
 // validateUnixStyleInstall validates a Unix-style Discord installation path (Linux native, macOS).
 // Unix Discord sometimes has a flatter structure: discord/0.0.35/modules/discord_desktop_core
-// But sometimes it has the same pattern as Windows. This function detects both patterns and also identifies Flatpak and Snap installations if requested.
+// But sometimes it has the same pattern as Windows. This function detects both patterns and also
+// identifies Flatpak and Snap installations if requested.
 func validateUnixStyleInstall(proposed string, detectFlatpak bool, detectSnap bool) *DiscordInstall {
 	var finalPath = ""
 	var selected = filepath.Base(proposed)
