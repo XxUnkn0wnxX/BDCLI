@@ -23,14 +23,14 @@ func Filter[T any](source []T, filterFunc func(T) bool) (ret []T) {
 }
 
 func FindSegment(p, segment string) (string, error) {
-    p = filepath.ToSlash(p)
+	p = filepath.ToSlash(p)
 
-    // Ensure segment is slash-wrapped for exact matching
-    search := "/" + strings.Trim(segment, "/") + "/"
-    idx := strings.Index(p, search)
-    if idx == -1 {
-        return "", fmt.Errorf("segment %q not found in path: %s", segment, p)
-    }
+	// Ensure segment is slash-wrapped for exact matching
+	search := "/" + strings.Trim(segment, "/") + "/"
+	idx := strings.Index(p, search)
+	if idx == -1 {
+		return "", fmt.Errorf("segment %q not found in path: %s", segment, p)
+	}
 
-    return filepath.FromSlash(p[:idx+len(search)-1]), nil
+	return filepath.FromSlash(p[:idx+len(search)-1]), nil
 }

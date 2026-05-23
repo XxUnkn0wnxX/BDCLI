@@ -286,89 +286,89 @@ func TestResolvePath(t *testing.T) {
 // are detected and handled correctly by the path resolution functions.
 func TestOldAndNewCorePathsCompatibility(t *testing.T) {
 	tests := []struct {
-		name              string
-		path              string
-		expectedChannel   models.DiscordChannel
-		expectedVersion   string
+		name            string
+		path            string
+		expectedChannel models.DiscordChannel
+		expectedVersion string
 	}{
 		// Old core structure - Linux
 		{
-			name:              "Old: Stable core path",
-			path:              "/home/user/.config/discord/0.0.90/modules/discord_desktop_core/core.asar",
-			expectedChannel:   models.Stable,
-			expectedVersion:   "0.0.90",
+			name:            "Old: Stable core path",
+			path:            "/home/user/.config/discord/0.0.90/modules/discord_desktop_core/core.asar",
+			expectedChannel: models.Stable,
+			expectedVersion: "0.0.90",
 		},
 		{
-			name:              "Old: Canary core path",
-			path:              "/home/user/.config/discordcanary/0.0.100/modules/discord_desktop_core/core.asar",
-			expectedChannel:   models.Canary,
-			expectedVersion:   "0.0.100",
+			name:            "Old: Canary core path",
+			path:            "/home/user/.config/discordcanary/0.0.100/modules/discord_desktop_core/core.asar",
+			expectedChannel: models.Canary,
+			expectedVersion: "0.0.100",
 		},
 		{
-			name:              "Old: PTB core path",
-			path:              "/home/user/.config/discordptb/0.0.80/modules/discord_desktop_core/core.asar",
-			expectedChannel:   models.PTB,
-			expectedVersion:   "0.0.80",
+			name:            "Old: PTB core path",
+			path:            "/home/user/.config/discordptb/0.0.80/modules/discord_desktop_core/core.asar",
+			expectedChannel: models.PTB,
+			expectedVersion: "0.0.80",
 		},
 
 		// New core structure (app-version with -1 suffix) - Linux
 		{
-			name:              "New: Stable core path with app prefix",
-			path:              "/home/user/.config/discord/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
-			expectedChannel:   models.Stable,
-			expectedVersion:   "0.0.90",
+			name:            "New: Stable core path with app prefix",
+			path:            "/home/user/.config/discord/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
+			expectedChannel: models.Stable,
+			expectedVersion: "0.0.90",
 		},
 		{
-			name:              "New: Canary core path with app prefix",
-			path:              "/home/user/.config/discordcanary/app-0.0.200/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
-			expectedChannel:   models.Canary,
-			expectedVersion:   "0.0.200",
+			name:            "New: Canary core path with app prefix",
+			path:            "/home/user/.config/discordcanary/app-0.0.200/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
+			expectedChannel: models.Canary,
+			expectedVersion: "0.0.200",
 		},
 		{
-			name:              "New: PTB core path with app prefix",
-			path:              "/home/user/.config/discordptb/app-0.0.150/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
-			expectedChannel:   models.PTB,
-			expectedVersion:   "0.0.150",
+			name:            "New: PTB core path with app prefix",
+			path:            "/home/user/.config/discordptb/app-0.0.150/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
+			expectedChannel: models.PTB,
+			expectedVersion: "0.0.150",
 		},
 
 		// Flatpak old structure
 		{
-			name:              "Flatpak: Old Canary path",
-			path:              "/home/user/.var/app/com.discordapp.DiscordCanary/config/discordcanary/0.0.200/modules/discord_desktop_core/core.asar",
-			expectedChannel:   models.Canary,
-			expectedVersion:   "0.0.200",
+			name:            "Flatpak: Old Canary path",
+			path:            "/home/user/.var/app/com.discordapp.DiscordCanary/config/discordcanary/0.0.200/modules/discord_desktop_core/core.asar",
+			expectedChannel: models.Canary,
+			expectedVersion: "0.0.200",
 		},
 
 		// Flatpak new structure
 		{
-			name:              "Flatpak: New Canary path",
-			path:              "/home/user/.var/app/com.discordapp.DiscordCanary/config/discordcanary/app-0.0.200/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
-			expectedChannel:   models.Canary,
-			expectedVersion:   "0.0.200",
+			name:            "Flatpak: New Canary path",
+			path:            "/home/user/.var/app/com.discordapp.DiscordCanary/config/discordcanary/app-0.0.200/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
+			expectedChannel: models.Canary,
+			expectedVersion: "0.0.200",
 		},
 
 		// Snap old structure
 		{
-			name:              "Snap: Old stable path",
-			path:              "/home/user/snap/discord/current/.config/discord/0.0.90/modules/discord_desktop_core/core.asar",
-			expectedChannel:   models.Stable,
-			expectedVersion:   "0.0.90",
+			name:            "Snap: Old stable path",
+			path:            "/home/user/snap/discord/current/.config/discord/0.0.90/modules/discord_desktop_core/core.asar",
+			expectedChannel: models.Stable,
+			expectedVersion: "0.0.90",
 		},
 
 		// Snap new structure
 		{
-			name:              "Snap: New stable path",
-			path:              "/home/user/snap/discord/current/.config/discord/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
-			expectedChannel:   models.Stable,
-			expectedVersion:   "0.0.90",
+			name:            "Snap: New stable path",
+			path:            "/home/user/snap/discord/current/.config/discord/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
+			expectedChannel: models.Stable,
+			expectedVersion: "0.0.90",
 		},
 
 		// Snap canary - new structure
 		{
-			name:              "Snap: New Canary path",
-			path:              "/home/user/snap/discord-canary/current/.config/discordcanary/app-0.0.200/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
-			expectedChannel:   models.Canary,
-			expectedVersion:   "0.0.200",
+			name:            "Snap: New Canary path",
+			path:            "/home/user/snap/discord-canary/current/.config/discordcanary/app-0.0.200/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
+			expectedChannel: models.Canary,
+			expectedVersion: "0.0.200",
 		},
 	}
 
@@ -394,9 +394,9 @@ func TestSortInstalls(t *testing.T) {
 
 	// Add unsorted installs - mix of old and new path formats
 	allDiscordInstalls[models.Stable] = []*DiscordInstall{
-		{CorePath: "/path1", Version: "0.0.34", Channel: models.Stable},                                                                          // Old format
+		{CorePath: "/path1", Version: "0.0.34", Channel: models.Stable},                                                                                              // Old format
 		{CorePath: "/home/user/.config/discord/app-0.0.36/modules/discord_desktop_core-1/discord_desktop_core/core.asar", Version: "0.0.36", Channel: models.Stable}, // New format
-		{CorePath: "/path3", Version: "0.0.35", Channel: models.Stable},                                                                          // Old format
+		{CorePath: "/path3", Version: "0.0.35", Channel: models.Stable},                                                                                              // Old format
 	}
 
 	// Sort them

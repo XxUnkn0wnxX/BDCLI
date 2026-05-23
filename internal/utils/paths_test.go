@@ -147,85 +147,85 @@ func TestFilterWithStructs(t *testing.T) {
 }
 
 func TestFindSegment(t *testing.T) {
-    tests := []struct {
-        name    string
-        path    string
-        segment string
-        want    string
-        wantErr bool
-    }{
-        {
-            name:    "flatpak style path",
-            path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/0.0.90/modules/discord_desktop_core/core.asar",
-            segment: "config",
-            want:    ".var/app/com.discordapp.DiscordCanary/config",
-        },
-        {
-            name:    "flatpak style path with app- prefix",
-            path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
-            segment: "config",
-            want:    ".var/app/com.discordapp.DiscordCanary/config",
-        },
-        {
-            name:    "snap style path",
-            path:    "home/user/.config/discordcanary/0.0.90/modules/discord_desktop_core/core.asar",
-            segment: ".config",
-            want:    "home/user/.config",
-        },
+	tests := []struct {
+		name    string
+		path    string
+		segment string
+		want    string
+		wantErr bool
+	}{
 		{
-            name:    "snap style path with app- prefix",
-            path:    "home/user/.config/discordcanary/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
-            segment: ".config",
-            want:    "home/user/.config",
-        },
-        {
-            name:    "segment not found",
-            path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/core.asar",
-            segment: ".config",
-            wantErr: true,
-        },
-        {
-            name:    "segment with leading slash",
-            path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/core.asar",
-            segment: "/config",
-            want:    ".var/app/com.discordapp.DiscordCanary/config",
-        },
-        {
-            name:    "segment with trailing slash",
-            path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/core.asar",
-            segment: "config/",
-            want:    ".var/app/com.discordapp.DiscordCanary/config",
-        },
-        {
-            name:    "segment with both slashes",
-            path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/core.asar",
-            segment: "/config/",
-            want:    ".var/app/com.discordapp.DiscordCanary/config",
-        },
-        {
-            name:    "empty path",
-            path:    "",
-            segment: "config",
-            wantErr: true,
-        },
-        {
-            name:    "empty segment",
-            path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/core.asar",
-            segment: "",
-            wantErr: true,
-        },
-    }
+			name:    "flatpak style path",
+			path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/0.0.90/modules/discord_desktop_core/core.asar",
+			segment: "config",
+			want:    ".var/app/com.discordapp.DiscordCanary/config",
+		},
+		{
+			name:    "flatpak style path with app- prefix",
+			path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
+			segment: "config",
+			want:    ".var/app/com.discordapp.DiscordCanary/config",
+		},
+		{
+			name:    "snap style path",
+			path:    "home/user/.config/discordcanary/0.0.90/modules/discord_desktop_core/core.asar",
+			segment: ".config",
+			want:    "home/user/.config",
+		},
+		{
+			name:    "snap style path with app- prefix",
+			path:    "home/user/.config/discordcanary/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
+			segment: ".config",
+			want:    "home/user/.config",
+		},
+		{
+			name:    "segment not found",
+			path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/core.asar",
+			segment: ".config",
+			wantErr: true,
+		},
+		{
+			name:    "segment with leading slash",
+			path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/core.asar",
+			segment: "/config",
+			want:    ".var/app/com.discordapp.DiscordCanary/config",
+		},
+		{
+			name:    "segment with trailing slash",
+			path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/core.asar",
+			segment: "config/",
+			want:    ".var/app/com.discordapp.DiscordCanary/config",
+		},
+		{
+			name:    "segment with both slashes",
+			path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/core.asar",
+			segment: "/config/",
+			want:    ".var/app/com.discordapp.DiscordCanary/config",
+		},
+		{
+			name:    "empty path",
+			path:    "",
+			segment: "config",
+			wantErr: true,
+		},
+		{
+			name:    "empty segment",
+			path:    ".var/app/com.discordapp.DiscordCanary/config/discordcanary/core.asar",
+			segment: "",
+			wantErr: true,
+		},
+	}
 
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got, err := FindSegment(tt.path, tt.segment)
-            if (err != nil) != tt.wantErr {
-                t.Errorf("FindSegment() error = %v, wantErr %v", err, tt.wantErr)
-                return
-            }
-            if got != tt.want {
-                t.Errorf("FindSegment() = %q, want %q", got, tt.want)
-            }
-        })
-    }
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := FindSegment(tt.path, tt.segment)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindSegment() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("FindSegment() = %q, want %q", got, tt.want)
+			}
+		})
+	}
 }
