@@ -84,151 +84,79 @@ bdcli uninstall --channel stable
 
 Use `bdcli [command] --help` for command-specific flags and examples.
 
-### Global Options
+### Command Reference
+
+| Command | Purpose | Example |
+| --- | --- | --- |
+| `install` | Install BetterDiscord to Discord | `bdcli install --channel stable` |
+| `uninstall` | Remove BetterDiscord from Discord | `bdcli uninstall --channel stable` |
+| `update` | Update BetterDiscord to latest | `bdcli update` |
+| `info` | Show installation state and metadata | `bdcli info` |
+| `discover` | Discover installs, paths, and addons | `bdcli discover installs` |
+| `plugins` | Manage BetterDiscord plugins | `bdcli plugins list` |
+| `themes` | Manage BetterDiscord themes | `bdcli themes list` |
+| `store` | Search and inspect store entries | `bdcli store search <query>` |
+| `completion` | Generate shell completion scripts | `bdcli completion zsh` |
+| `version` | Print CLI version | `bdcli version` |
+
+### Detailed Examples
+
+<details>
+<summary>Common Workflows</summary>
 
 ```bash
-bdcli --silent <command>   # Suppress non-error output
-```
-
-You can also set `BDCLI_SILENT=1` to silence output in automation.
-
-### Install BetterDiscord
-
-Install BetterDiscord to a specific Discord channel:
-
-```bash
-bdcli install --channel stable   # Install to Discord Stable
-bdcli install --channel ptb      # Install to Discord PTB
-bdcli install --channel canary   # Install to Discord Canary
-```
-
-Install BetterDiscord by providing a Discord install path:
-
-```bash
-bdcli install --path /path/to/Discord
-```
-
-### Uninstall BetterDiscord
-
-Uninstall BetterDiscord from a specific Discord channel:
-
-```bash
-bdcli uninstall --channel stable   # Uninstall from Discord Stable
-bdcli uninstall --channel ptb      # Uninstall from Discord PTB
-bdcli uninstall --channel canary   # Uninstall from Discord Canary
-```
-
-Uninstall BetterDiscord by providing a Discord install path:
-
-```bash
-bdcli uninstall --path /path/to/Discord
-```
-
-Uninject BetterDiscord from all detected Discord installations (without deleting data):
-
-```bash
-bdcli uninstall --all
-```
-
-Fully uninstall BetterDiscord from all Discord installations and remove all BetterDiscord folders:
-
-```bash
-bdcli uninstall --full
-```
-
-### Check Version
-
-```bash
-bdcli version
-```
-
-### Update BetterDiscord
-
-```bash
+# Install / update / inspect
+bdcli install --channel stable
 bdcli update
-bdcli update --check
-```
-
-### Show BetterDiscord Info
-
-```bash
 bdcli info
-```
 
-### Discover Discord Installs
+# Uninstall from one channel
+bdcli uninstall --channel stable
 
-```bash
+# Discover installed targets
 bdcli discover installs
-bdcli discover paths
-bdcli discover addons
-```
 
-### Manage Plugins
-
-```bash
+# Basic addon workflow
 bdcli plugins list
-bdcli plugins info <name>
-bdcli plugins install <name|id|url>
-bdcli plugins update <name|id|url>
-bdcli plugins update <name|id> --check    # Check for updates without installing
-bdcli plugins remove <name|id>
-```
-
-### Manage Themes
-
-```bash
 bdcli themes list
-bdcli themes info <name>
-bdcli themes install <name|id|url>
-bdcli themes update <name|id|url>
-bdcli themes update <name|id> --check     # Check for updates without installing
-bdcli themes remove <name|id>
 ```
 
-### Browse the Store
+</details>
+
+<details>
+<summary>Advanced Workflows</summary>
 
 ```bash
+# Install or uninstall by explicit path
+bdcli install --path /path/to/Discord
+bdcli uninstall --path /path/to/Discord
+
+# Global removal modes
+bdcli uninstall --all
+bdcli uninstall --full
+
+# Check-only updates
+bdcli update --check
+bdcli plugins update <name|id> --check
+bdcli themes update <name|id> --check
+
+# Store browsing
 bdcli store search <query>
-bdcli store show <id|name>
-
-bdcli store plugins search <query>
 bdcli store plugins show <id|name>
-
-bdcli store themes search <query>
 bdcli store themes show <id|name>
-```
 
-### Shell Completions
-
-```bash
-bdcli completion bash
+# Shell + automation
 bdcli completion zsh
-bdcli completion fish
-```
-
-### Help
-
-```bash
-bdcli --help
-bdcli [command] --help
-```
-
-### Automation
-
-For scripts and CI jobs, you can suppress non-error output:
-
-```bash
-# One-off command
 bdcli --silent install --channel stable
-
-# Environment variable (applies to all commands)
 BDCLI_SILENT=1 bdcli update
 ```
+
+</details>
 
 ### CLI Help Output
 
 <details>
-<summary>Show full root help output</summary>
+<summary>Show Full Root Help Output</summary>
 
 ```
 A cross-platform CLI for installing, updating, and managing BetterDiscord.
@@ -258,15 +186,6 @@ Use "bdcli [command] --help" for more information about a command.
 ```
 
 </details>
-
-## Platform Notes
-
-- Linux Snap Discord installs are not supported.
-- Flatpak Discord installs are supported.
-
-### Unsupported Configurations
-
-- Linux Snap Discord installs are not supported due to upstream Snap packaging/runtime changes.
 
 ## FAQ
 
@@ -299,8 +218,22 @@ Replace `com.discordapp.Discord` with your Discord Flatpak app ID if it differs 
 ### Prerequisites
 
 - [Go](https://go.dev/) 1.26 or higher
-- [Task](https://taskfile.dev/) (optional, for task automation)
-- [GoReleaser](https://goreleaser.com/) (for releases)
+- [Task](https://taskfile.dev/) (optional)
+- [GoReleaser](https://goreleaser.com/) (optional, release builds)
+
+### Quick Dev Loop
+
+```bash
+# Install dependencies
+task setup
+
+# Run locally
+task run -- install stable
+
+# Test + build
+task test
+task build
+```
 
 ### Setup
 
@@ -312,90 +245,39 @@ cd cli
 task setup  # Or: go mod download
 ```
 
-### Available Tasks
-
-Run `task --list-all` to see all available tasks:
-
-```bash
-# Development
-task run             # Run the CLI (pass args with: task run -- install stable)
-
-# Building
-task build           # Build for current platform
-task build:all       # Build for all platforms (GoReleaser)
-
-# Testing
-task test            # Run tests
-task test:verbose    # Run tests with verbose output
-task coverage        # Run tests with coverage summary
-task coverage:html   # Generate HTML coverage report
-
-# Code Quality
-task fmt             # Format Go files
-task vet             # Run go vet
-task lint            # Run golangci-lint
-task check           # Run fix, fmt, vet, lint, test
-
-# Release
-task release:snapshot # Test release build
-task release          # Create release (requires tag)
-
-# Cleaning
-task clean           # Remove build and debug artifacts
-```
-
-### Running Locally
+<details>
+<summary>Additional Tasks And Release Flow</summary>
 
 ```bash
-# Run directly
-go run main.go install stable
+# Task catalog
+task --list-all
 
-# Or use Task
-task run -- install stable
-```
+# Useful checks
+task coverage
+task coverage:html
+task check
 
-### Building
-
-```bash
-# Build for current platform
-task build
-
-# Build for all platforms
+# Multi-platform builds
 task build:all
 
-# Output will be in ./dist/
+# Release helpers
+task release:snapshot
+task release
 ```
 
-### Testing
+Release outline:
 
-```bash
-# Run all tests
-task test
+1. Create and push a new tag.
+2. GitHub Actions builds artifacts and creates a draft release.
+3. Publish the GitHub release.
+4. Publish the npm package.
 
-# Run with coverage
-task coverage
-```
-
-### Releasing
-
-1. Create and push a new tag:
-
-   ```bash
-   git tag -a v0.2.0 -m "Release v0.2.0"
-   git push origin v0.2.0
-   ```
-
-2. GitHub Actions will automatically build and create a draft release
-
-3. Edit the release notes and publish
-
-4. Publish to npm:
-
-   ```bash
-   npm publish
-   ```
+</details>
 
 ## Project Structure
+
+<details>
+<summary>Show Project Structure</summary>
 
 ```py
 .
@@ -420,6 +302,8 @@ task coverage
 └── .goreleaser.yaml    # Release configuration
 ```
 
+</details>
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -430,24 +314,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License
-
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-## Links
-
-- [BetterDiscord Website](https://betterdiscord.app/)
-- [BetterDiscord Documentation](https://docs.betterdiscord.app/)
-- [Issue Tracker](https://github.com/BetterDiscord/cli/issues)
-- [npm Package](https://www.npmjs.com/package/@betterdiscord/cli)
-
-## Acknowledgments
-
-Built with:
-
-- [Cobra](https://github.com/spf13/cobra) - CLI framework
-- [GoReleaser](https://goreleaser.com/) - Release automation
-- [Task](https://taskfile.dev/) - Task runner
+<a href="https://github.com/betterdiscord/cli/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=betterdiscord/cli" />
+</a>
 
 ---
 
