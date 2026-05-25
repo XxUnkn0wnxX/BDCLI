@@ -44,7 +44,7 @@ This repository contains the source code for the BetterDiscord CLI. It is a nati
 - Manage plugins and themes (list, install, update, remove)
 - Browse and search the BetterDiscord store
 - Cross-platform support (Windows, macOS, Linux)
-- Available via npm for easy distribution
+- Available via brew, npm, and winget for easy distribution
 - Fast and lightweight Go binary
 
 ## Compatibility Matrix
@@ -63,7 +63,13 @@ Linux install support:
 
 ## Installation
 
-### Via npm (Recommended)
+### Via Homebrew/Linuxbrew (Recommended)
+
+```bash
+brew install betterdiscord/tap/bdcli
+```
+
+### Via npm
 
 ```bash
 npm install -g @betterdiscord/cli
@@ -79,12 +85,6 @@ go install github.com/betterdiscord/cli@latest
 
 ```bash
 winget install betterdiscord.cli
-```
-
-### Via Homebrew/Linuxbrew
-
-```bash
-brew install betterdiscord/tap/bdcli
 ```
 
 ### Download Binary
@@ -295,9 +295,15 @@ task release
 Release outline:
 
 1. Create and push a new tag.
-2. GitHub Actions builds artifacts and creates a draft release.
-3. Publish the GitHub release.
-4. Publish the npm package.
+2. GitHub Actions starts to build and draft all releases.
+   1. Build binaries for Windows, macOS, and Linux.
+   2. Publish to package managers (Homebrew, npm, winget, etc.).
+   3. Generate release notes on GitHub.
+3. Verify releases.
+   1. Verify pull request to `winget` is valid
+   2. Verify successful commit to homebrew tap
+   3. Verify successful publish to npm
+4. Manually cleanup and finish any steps missed by automation
 
 </details>
 
