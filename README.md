@@ -7,16 +7,32 @@
 
 A cross-platform command-line interface for installing, updating, and managing [BetterDiscord](https://betterdiscord.app/).
 
+[Overview](#overview) | [Compatibility](#compatibility-matrix) | [Installation](#installation) | [Quick Start](#quick-start) | [Usage](#usage) | [FAQ](#faq) | [Development](#development)
+
+## Overview
+
+This repository contains the source code for the BetterDiscord CLI. It is a native Go command-line tool for installing, removing, and maintaining BetterDiscord across supported Discord desktop installations.
+
 ## Features
 
-- 🚀 Easy installation and uninstallation of BetterDiscord
-- 🔄 Support for multiple Discord channels (Stable, PTB, Canary)
-- 🧭 Discover Discord installs and suggested paths
-- 🧩 Manage plugins and themes (list, install, update, remove)
-- 🛒 Browse and search the BetterDiscord store
-- 🖥️ Cross-platform support (Windows, macOS, Linux)
-- 📦 Available via npm for easy distribution
-- ⚡ Fast and lightweight Go binary
+- Easy installation and uninstallation of BetterDiscord
+- Support for multiple Discord channels (Stable, PTB, Canary)
+- Discover Discord installs and suggested paths
+- Manage plugins and themes (list, install, update, remove)
+- Browse and search the BetterDiscord store
+- Cross-platform support (Windows, macOS, Linux)
+- Available via npm for easy distribution
+- Fast and lightweight Go binary
+
+## Compatibility Matrix
+
+| Platform | Minimum Version / Install Type | Support Status | Notes |
+| --- | --- | --- | --- |
+| Windows | Windows 11+ | ✅ | x64, ARM64, and x86 builds are available. |
+| macOS | macOS 14+ | ✅ | x64 and ARM64 builds are available. |
+| Linux | Native Discord install | ✅ | Standard package-manager installs are supported. |
+| Linux | Flatpak Discord install | ✅ | Flatpak-based Discord installs are supported. |
+| Linux | Snap Discord install | ❌ | Unsupported due to upstream Snap packaging/runtime changes. |
 
 ## Installation
 
@@ -48,7 +64,25 @@ brew install betterdiscord/tap/bdcli
 
 Download the latest release for your platform from the [releases page](https://github.com/BetterDiscord/cli/releases).
 
+## Quick Start
+
+```bash
+# Install BetterDiscord to Discord Stable
+bdcli install --channel stable
+
+# Check installation details
+bdcli info
+
+# Update BetterDiscord
+bdcli update
+
+# Uninstall from a specific channel
+bdcli uninstall --channel stable
+```
+
 ## Usage
+
+Use `bdcli [command] --help` for command-specific flags and examples.
 
 ### Global Options
 
@@ -193,6 +227,9 @@ BDCLI_SILENT=1 bdcli update
 
 ### CLI Help Output
 
+<details>
+<summary>Show full root help output</summary>
+
 ```
 A cross-platform CLI for installing, updating, and managing BetterDiscord.
 
@@ -220,19 +257,12 @@ Flags:
 Use "bdcli [command] --help" for more information about a command.
 ```
 
-## Supported Platforms
+</details>
 
-- **Windows** (x64, ARM64, x86) - Windows 11+
-- **macOS** (x64, ARM64/M1/M2) - macOS 14+
-- **Linux** (x64, ARM64, ARM)
+## Platform Notes
 
-### Linux Compatibility
-
-| Install Type | Support Status | Notes |
-| --- | --- | --- |
-| Native Discord install | ✅ | Standard package-manager installs are supported. |
-| Flatpak Discord install | ✅ | Flatpak-based Discord installs are supported. |
-| Snap Discord install | ❌ | Unsupported due to upstream Snap packaging/runtime changes. |
+- Linux Snap Discord installs are not supported.
+- Flatpak Discord installs are supported.
 
 ### Unsupported Configurations
 
