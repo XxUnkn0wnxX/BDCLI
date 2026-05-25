@@ -222,9 +222,47 @@ Use "bdcli [command] --help" for more information about a command.
 
 ## Supported Platforms
 
-- **Windows** (x64, ARM64, x86)
-- **macOS** (x64, ARM64/M1/M2)
+- **Windows** (x64, ARM64, x86) - Windows 11+
+- **macOS** (x64, ARM64/M1/M2) - macOS 14+
 - **Linux** (x64, ARM64, ARM)
+
+### Linux Compatibility
+
+| Install Type | Support Status | Notes |
+| --- | --- | --- |
+| Native Discord install | ✅ | Standard package-manager installs are supported. |
+| Flatpak Discord install | ✅ | Flatpak-based Discord installs are supported. |
+| Snap Discord install | ❌ | Unsupported due to upstream Snap packaging/runtime changes. |
+
+### Unsupported Configurations
+
+- Linux Snap Discord installs are not supported due to upstream Snap packaging/runtime changes.
+
+## FAQ
+
+### Does the CLI support Flatpak Discord on Linux?
+
+Yes. Flatpak Discord installs are supported.
+
+### Why is Snap Discord unsupported on Linux?
+
+Discord Snap packaging/runtime changes prevent the CLI from supporting Snap installs.
+
+### How can I use the global BetterDiscord folder with Flatpak?
+
+1. Grant the Flatpak app access to the BetterDiscord config directory:
+
+```sh
+flatpak --user override com.discordapp.Discord --filesystem=xdg-config/BetterDiscord:rw
+```
+
+2. Symlink the BetterDiscord folder into the Flatpak app config:
+
+```sh
+ln -s "${XDG_CONFIG_HOME:-$HOME/.config}/BetterDiscord" "$HOME/.var/app/com.discordapp.Discord/config/BetterDiscord"
+```
+
+Replace `com.discordapp.Discord` with your Discord Flatpak app ID if it differs on your system.
 
 ## Development
 
