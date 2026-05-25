@@ -49,13 +49,17 @@ This repository contains the source code for the BetterDiscord CLI. It is a nati
 
 ## Compatibility Matrix
 
-| Platform | Minimum Version / Install Type | Support Status | Notes |
+| Platform | Minimum Version | Support Status | Notes |
 | --- | --- | --- | --- |
-| Windows | Windows 11+ | ✅ | x64, ARM64, and x86 builds are available. |
-| macOS | macOS 14+ | ✅ | x64 and ARM64 builds are available. |
-| Linux | Native Discord install | ✅ | Standard package-manager installs are supported. |
-| Linux | Flatpak Discord install | ✅ | Flatpak-based Discord installs are supported. |
-| Linux | Snap Discord install | ❌ | Unsupported due to upstream Snap packaging/runtime changes. |
+| Windows | Windows 10+ | ✅ | x64, ARM64, and x86 builds are available. |
+| macOS | macOS 11+ (Big Sur) | ✅ | x64 and ARM64 builds are available. |
+| Linux | Ubuntu 20.04+ and Debian 11+, openSUSE 16.2+, Fedora Linux 32+ | ✅ | See Linux install support notes below. |
+
+Linux install support:
+
+- Native Discord install: ✅ Supported
+- Flatpak Discord install: ✅ Supported
+- Snap Discord install: ❌ Unsupported due to upstream Snap packaging/runtime changes
 
 ## Installation
 
