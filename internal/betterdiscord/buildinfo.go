@@ -129,7 +129,7 @@ func (bdinstall *BDInstall) LogBuildinfo() {
 
 	output.Printf("   Installation Paths:\n")
 	output.Printf("     📁 Base:    %s\n", bdinstall.Root())
-	output.Printf("     ⚙️  Data:    %s\n", bdinstall.Data())
+	output.Printf("     📊 Data:    %s\n", bdinstall.Data())
 	output.Printf("     🔌 Plugins: %s\n", bdinstall.Plugins())
 	output.Printf("     🎨 Themes:  %s\n", bdinstall.Themes())
 }
