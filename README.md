@@ -66,13 +66,15 @@ brew uninstall xxunkn0wnxx/tap/bdcli
 
 ### Build Locally
 
+Use the fork's local macOS build helper, [scripts/build-macos.zsh](scripts/build-macos.zsh), from the repository root:
+
 ```bash
 git clone https://github.com/XxUnkn0wnxX/BDCLI.git
 cd BDCLI
 ./scripts/build-macos.zsh
 ```
 
-That script builds a macOS 11 Big Sur Intel binary and a commit-named archive under `dist/`.
+The script resolves the repository root, uses the available Go toolchain from `PATH`, generates shell completions, and writes the macOS 11 Big Sur Intel binary plus a commit-named archive under `dist/`.
 
 ### Download Release
 
