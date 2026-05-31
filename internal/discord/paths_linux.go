@@ -16,17 +16,20 @@ func init() {
 		// Native. Data is stored under `~/.config`.
 		// Example: `~/.config/discordcanary`.
 		// Core: `~/.config/discordcanary/0.0.90/modules/discord_desktop_core/core.asar`.
+		// Updated Core: `~/.config/discordcanary/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar`.
 		filepath.Join(config, "{channel}"),
 
 		// Flatpak. These user data paths are universal for all Flatpak installations on all machines.
 		// Example: `.var/app/com.discordapp.DiscordCanary/config/discordcanary`.
 		// Core: `.var/app/com.discordapp.DiscordCanary/config/discordcanary/0.0.90/modules/discord_desktop_core/core.asar`
+		// Updated Core: `.var/app/com.discordapp.DiscordCanary/config/discordcanary/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar`.
 		filepath.Join(home, ".var", "app", "com.discordapp.{CHANNEL}", "config", "{channel}"),
 
 		// Snap. Just like with Flatpaks, these paths are universal for all Snap installations.
 		// Example: `snap/discord/current/.config/discord`.
 		// Example: `snap/discord-canary/current/.config/discordcanary`.
 		// Core: `snap/discord-canary/current/.config/discordcanary/0.0.90/modules/discord_desktop_core/core.asar`.
+		// Updated Core: `snap/discord-canary/current/.config/discordcanary/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar`.
 		// NOTE: Snap user data always exists, even when the Snap isn't mounted/running.
 		filepath.Join(home, "snap", "{channel-}", "current", ".config", "{channel}"),
 	}
