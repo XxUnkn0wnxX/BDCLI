@@ -1,26 +1,52 @@
-# BetterDiscord CLI
+<h1 align="center">BetterDiscord CLI</h1>
 
-[![Go Version](https://img.shields.io/badge/Go-1.24.x-00ADD8?logo=go&logoColor=white)](https://github.com/XxUnkn0wnxX/BDCLI/blob/develop/go.mod)
-[![Main Artifact](https://img.shields.io/github/actions/workflow/status/XxUnkn0wnxX/BDCLI/release.yml?branch=main&label=Main%20Artifact)](https://github.com/XxUnkn0wnxX/BDCLI/actions/workflows/release.yml)
-[![License](https://img.shields.io/github/license/XxUnkn0wnxX/BDCLI)](LICENSE)
+<p align="center">
+  <a href="#overview">Overview</a> |
+  <a href="#compatibility">Compatibility</a> |
+  <a href="#installation">Installation</a> |
+  <a href="#quick-start">Quick Start</a> |
+  <a href="#usage">Usage</a> |
+  <a href="#faq">FAQ</a> |
+  <a href="#development">Development</a>
+</p>
 
-A fork of BetterDiscord CLI focused on keeping the tool usable on older Intel Macs that are limited to macOS 11 Big Sur.
+<p align="center">
+  <a href="https://github.com/XxUnkn0wnxX/BDCLI/blob/develop/go.mod">
+    <img src="https://img.shields.io/badge/Go-1.24.x-00ADD8?logo=go&logoColor=white" alt="Go Version">
+  </a>
+  <a href="https://github.com/XxUnkn0wnxX/BDCLI/actions/workflows/release.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/XxUnkn0wnxX/BDCLI/release.yml?branch=main&label=Main%20Artifact" alt="Main Artifact">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/github/license/XxUnkn0wnxX/BDCLI" alt="License">
+  </a>
+</p>
 
-This fork is for older Intel Macs that are limited to macOS 11 Big Sur. It does not target Windows or Linux.
+## Overview
+
+This is a fork of BetterDiscord CLI focused on keeping the tool usable on older Intel Macs that are limited to macOS 11 Big Sur.
+
+It installs, removes, updates, and inspects BetterDiscord for supported macOS Discord desktop installations. The README, workflows, and release assets in this fork document the macOS Big Sur Intel path only.
 
 ## Features
 
-- 🚀 Easy installation and uninstallation of BetterDiscord
-- 🔄 Support for multiple Discord channels (Stable, PTB, Canary)
-- 🧭 Discover Discord installs and suggested paths
-- 🧩 Manage plugins and themes (list, install, update, remove)
-- 🛒 Browse and search the BetterDiscord store
-- 🍎 Focused on macOS Big Sur-compatible Intel Mac builds
-- ⚡ Fast and lightweight Go binary
+- Easy installation and uninstallation of BetterDiscord.
+- Support for Discord Stable, PTB, and Canary.
+- Discovery for Discord installs, suggested paths, and BetterDiscord addons.
+- Plugin and theme management commands.
+- BetterDiscord store browsing and lookup commands.
+- macOS 11 Big Sur-compatible Intel Mac release artifacts.
+- Local source builds with the fork's pinned Go 1.24.x toolchain.
+
+## Compatibility
+
+| Platform | Minimum Version | Architecture | Support Status | Notes |
+| --- | --- | --- | --- | --- |
+| macOS | macOS 11 Big Sur | Intel | Supported | This is the only release target for this fork. |
 
 ## Installation
 
-### Install With Homebrew
+### Homebrew
 
 The recommended install path is the `xxunkn0wnxx/tap` Homebrew tap:
 
@@ -29,7 +55,7 @@ brew tap xxunkn0wnxx/tap
 brew install --HEAD -sv xxunkn0wnxx/tap/bdcli
 ```
 
-The tap formula is HEAD-only. It builds `bdcli` from this fork's `main` branch, builds from source, and uses the tap-local Big Sur-compatible Go formula as its build dependency.
+The tap formula is HEAD-only. It builds `bdcli` from this fork's `main` branch and uses the tap-local Big Sur-compatible Go formula as its build dependency.
 
 To update or remove the Homebrew install:
 
@@ -38,7 +64,7 @@ brew reinstall --HEAD -sv xxunkn0wnxx/tap/bdcli
 brew uninstall xxunkn0wnxx/tap/bdcli
 ```
 
-### Clone And Build Locally
+### Build Locally
 
 ```bash
 git clone https://github.com/XxUnkn0wnxX/BDCLI.git
@@ -46,174 +72,172 @@ cd BDCLI
 ./scripts/build-macos.zsh
 ```
 
-That script builds the macOS 11 Big Sur Intel binary and a commit-named archive under `dist/`.
+That script builds a macOS 11 Big Sur Intel binary and a commit-named archive under `dist/`.
 
 ### Download Release
 
-Download the latest Big Sur Intel binary from the GitHub Releases page, or use the workflow artifact from the matching `main` run if you want the Actions artifact copy.
+Download the latest Big Sur Intel binary from this fork's GitHub Releases page, or use the workflow artifact from the matching `main` run if you want the Actions artifact copy.
 
-GitHub Actions for this fork build macOS Big Sur Intel binaries only.
-Pushes to `develop` run checks only.
-Pushes to `main` run checks, upload the macOS binary as a workflow artifact, and replace the single rolling GitHub release with the latest macOS binary. GitHub also provides the source code archives for that release tag.
+GitHub Actions for this fork build macOS Big Sur Intel binaries only. Pushes to `develop` run checks only. Pushes to `main` run checks, upload the macOS binary as a workflow artifact, and replace the single rolling GitHub release with the latest macOS binary.
+
+## Quick Start
+
+```bash
+# Install BetterDiscord to Discord Stable
+bdcli install --channel stable
+
+# Check installation details
+bdcli info
+
+# Update BetterDiscord
+bdcli update
+
+# Uninstall from a specific channel
+bdcli uninstall --channel stable
+```
 
 ## Usage
 
-### Global Options
+Use `bdcli [command] --help` for command-specific flags and examples.
+
+### Command Reference
+
+| Command | Purpose | Example |
+| --- | --- | --- |
+| `install` | Install BetterDiscord to Discord | `bdcli install --channel stable` |
+| `uninstall` | Remove BetterDiscord from Discord | `bdcli uninstall --channel stable` |
+| `update` | Update BetterDiscord to latest | `bdcli update` |
+| `info` | Show installation state and metadata | `bdcli info` |
+| `discover` | Discover installs, paths, and addons | `bdcli discover installs` |
+| `plugins` | Manage BetterDiscord plugins | `bdcli plugins list` |
+| `themes` | Manage BetterDiscord themes | `bdcli themes list` |
+| `store` | Search and inspect store entries | `bdcli store search <query>` |
+| `completion` | Generate shell completion scripts | `bdcli completion zsh` |
+| `version` | Print CLI version | `bdcli version` |
+
+### Common Workflows
+
+<details>
+<summary>Install, update, inspect</summary>
 
 ```bash
-bdcli --silent <command>   # Suppress non-error output
-```
+bdcli install --channel stable
+bdcli install --channel ptb
+bdcli install --channel canary
 
-You can also set `BDCLI_SILENT=1` to silence output in automation.
-
-### Install BetterDiscord
-
-Install BetterDiscord to a specific Discord channel:
-
-```bash
-bdcli install --channel stable   # Install to Discord Stable
-bdcli install --channel ptb      # Install to Discord PTB
-bdcli install --channel canary   # Install to Discord Canary
-```
-
-Install BetterDiscord by providing a Discord install path:
-
-```bash
-bdcli install --path /path/to/Discord
-```
-
-### Uninstall BetterDiscord
-
-Uninstall BetterDiscord from a specific Discord channel:
-
-```bash
-bdcli uninstall --channel stable   # Uninstall from Discord Stable
-bdcli uninstall --channel ptb      # Uninstall from Discord PTB
-bdcli uninstall --channel canary   # Uninstall from Discord Canary
-```
-
-Uninstall BetterDiscord by providing a Discord install path:
-
-```bash
-bdcli uninstall --path /path/to/Discord
-```
-
-Uninject BetterDiscord from all detected Discord installations (without deleting data):
-
-```bash
-bdcli uninstall --all
-```
-
-Fully uninstall BetterDiscord from all Discord installations and remove all BetterDiscord folders:
-
-```bash
-bdcli uninstall --full
-```
-
-### Check Version
-
-```bash
+bdcli update
+bdcli update --check
+bdcli info
 bdcli version
 ```
 
-### Update BetterDiscord
+</details>
+
+<details>
+<summary>Explicit paths and uninstall modes</summary>
 
 ```bash
-bdcli update
-bdcli update --check
+bdcli install --path /Applications/Discord.app
+bdcli uninstall --path /Applications/Discord.app
+
+bdcli uninstall --all
+bdcli uninstall --full
 ```
 
-### Show BetterDiscord Info
+</details>
 
-```bash
-bdcli info
-```
-
-### Discover Discord Installs
+<details>
+<summary>Plugins, themes, store, and automation</summary>
 
 ```bash
 bdcli discover installs
 bdcli discover paths
 bdcli discover addons
-```
 
-### Manage Plugins
-
-```bash
 bdcli plugins list
 bdcli plugins info <name>
 bdcli plugins install <name|id|url>
 bdcli plugins update <name|id|url>
-bdcli plugins update <name|id> --check    # Check for updates without installing
+bdcli plugins update <name|id> --check
 bdcli plugins remove <name|id>
-```
 
-### Manage Themes
-
-```bash
 bdcli themes list
 bdcli themes info <name>
 bdcli themes install <name|id|url>
 bdcli themes update <name|id|url>
-bdcli themes update <name|id> --check     # Check for updates without installing
+bdcli themes update <name|id> --check
 bdcli themes remove <name|id>
-```
 
-### Browse the Store
-
-```bash
 bdcli store search <query>
-bdcli store show <id|name>
-
 bdcli store plugins search <query>
 bdcli store plugins show <id|name>
-
 bdcli store themes search <query>
 bdcli store themes show <id|name>
-```
 
-### Shell Completions
-
-```bash
-bdcli completion bash
 bdcli completion zsh
-bdcli completion fish
-```
-
-### Help
-
-```bash
-bdcli --help
-bdcli [command] --help
-```
-
-### Automation
-
-For scripts and CI jobs, you can suppress non-error output:
-
-```bash
-# One-off command
 bdcli --silent install --channel stable
-
-# Environment variable (applies to all commands)
 BDCLI_SILENT=1 bdcli update
 ```
 
-## Supported Platforms
+</details>
 
-- **macOS 11 Big Sur** (x64 / Intel)
+### CLI Help Output
+
+<details>
+<summary>Show root help output</summary>
+
+```text
+A command-line interface for installing, updating, and managing BetterDiscord.
+
+Usage:
+   bdcli [flags]
+   bdcli [command]
+
+Available Commands:
+   completion  Generate shell completions
+   discover    Discover Discord installations and related data
+   help        Help about any command
+   info        Displays information about BetterDiscord installation
+   install     Installs BetterDiscord to your Discord
+   plugins     Manage BetterDiscord plugins
+   store       Browse and search the BetterDiscord store
+   themes      Manage BetterDiscord themes
+   uninstall   Uninstalls BetterDiscord from your Discord
+   update      Update BetterDiscord to the latest version
+   version     Print the version number
+
+Flags:
+       --silent   Suppress non-error output
+   -h, --help     help for bdcli
+
+Use "bdcli [command] --help" for more information about a command.
+```
+
+</details>
+
+## FAQ
+
+### Is this the upstream BetterDiscord CLI?
+
+No. This fork tracks useful upstream CLI fixes while preserving a macOS 11 Big Sur Intel build and release flow.
+
+### Why is Go pinned to 1.24.x?
+
+The fork uses a lower Go toolchain to keep the local Big Sur build path working on older Intel Macs.
+
+### Where do release binaries come from?
+
+The `main` workflow builds the macOS 11 Intel binary, uploads it as a workflow artifact, and replaces the rolling GitHub release asset.
 
 ## Development
 
 ### Prerequisites
 
-- [Go](https://go.dev/) 1.24.x
-- [Task](https://taskfile.dev/) (optional, for task automation)
-- [GoReleaser](https://goreleaser.com/) (for releases)
+- [Go](https://go.dev/) 1.24.x.
+- [Task](https://taskfile.dev/) for task automation.
+- [GoReleaser](https://goreleaser.com/) for local release artifact checks.
 
 ### Setup
-
-Clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/XxUnkn0wnxX/BDCLI.git
@@ -221,128 +245,112 @@ cd BDCLI
 task setup  # Or: go mod download
 ```
 
-### Available Tasks
-
-Run `task --list-all` to see all available tasks:
+### Quick Dev Loop
 
 ```bash
-# Development
-task run             # Run the CLI (pass args with: task run -- install stable)
+# Run locally
+go run main.go install stable
+task run -- install stable
 
-# Building
-task build           # Build for current platform
-task build:all       # Build macOS Big Sur release artifacts (GoReleaser)
+# Test and build
+task test
+task build
+```
+
+<details>
+<summary>Tasks and release flow</summary>
+
+```bash
+# Task catalog
+task --list-all
 
 # Testing
-task test            # Run tests
-task test:verbose    # Run tests with verbose output
-task coverage        # Run tests with coverage summary
-task coverage:html   # Generate HTML coverage report
+task test
+task test:verbose
+task coverage
+task coverage:html
 
-# Code Quality
-task fmt             # Format Go files
-task vet             # Run go vet
-task lint            # Run golangci-lint
-task check           # Run fix, fmt, vet, lint, test
+# Code quality
+task fmt
+task vet
+task lint
+task check
 
-# Release
-task release:snapshot # Test release build
-task release          # Build a local Big Sur artifact bundle
-
-# Cleaning
-task clean           # Remove build and debug artifacts
-```
-
-### Running Locally
-
-```bash
-# Run directly
-go run main.go install stable
-
-# Or use Task
-task run -- install stable
-```
-
-### Building
-
-```bash
-# Build for current platform
+# Building
 task build
-
-# Build macOS Big Sur release artifacts
 task build:all
 
-# Output will be in ./dist/
+# Release helpers
+task release:snapshot
+task release
+
+# Cleaning
+task clean
 ```
 
-### Testing
+Release outline:
 
-```bash
-# Run all tests
-task test
+1. Develop and verify changes on `develop`.
+2. Promote `develop` to `main` with a fast-forward merge.
+3. Push `main` so GitHub Actions builds the macOS Big Sur Intel artifact.
+4. Return to `develop` and fast-forward it from `main`.
 
-# Run with coverage
-task coverage
-```
-
-### Main Branch Artifacts
-
-1. Push code changes to `main`
-2. GitHub Actions will run checks, upload the macOS binary as a workflow artifact, and replace the rolling GitHub release
-3. Download the macOS binary from the GitHub Releases page or from the workflow artifact
+</details>
 
 ## Project Structure
+
+<details>
+<summary>Show project structure</summary>
 
 ```py
 .
 ├── cmd/                  # Cobra commands
-│   ├── install.go       # Install command
-│   ├── update.go        # Update command
-│   ├── info.go          # Info command
 │   ├── discover.go      # Discover command
-│   ├── plugins.go       # Plugins commands
-│   ├── themes.go        # Themes commands
+│   ├── info.go          # Info command
+│   ├── install.go       # Install command
+│   ├── plugins.go       # Plugin commands
+│   ├── root.go          # Root command
 │   ├── store.go         # Store commands
+│   ├── themes.go        # Theme commands
 │   ├── uninstall.go     # Uninstall command
-│   ├── version.go       # Version command
-│   └── root.go          # Root command
+│   ├── update.go        # Update command
+│   └── version.go       # Version command
 ├── internal/            # Internal packages
 │   ├── betterdiscord/  # BetterDiscord installation logic
 │   ├── discord/        # Discord path resolution and injection
 │   ├── models/         # Data models
+│   ├── output/         # Output formatting
 │   └── utils/          # Utility functions
-├── main.go             # Entry point
-├── Taskfile.yml        # Task automation
-└── .goreleaser.yaml    # Release configuration
+├── scripts/             # Fork build and completion scripts
+├── main.go              # Entry point
+├── Taskfile.yml         # Task automation
+└── .goreleaser.yaml     # macOS Big Sur release configuration
 ```
+
+</details>
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Contributions should preserve this fork's macOS Big Sur Intel focus. See [CONTRIBUTING.md](CONTRIBUTING.md) before changing Go versions, workflow files, release config, or build scripts.
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 
 ## Links
 
 - [BetterDiscord Website](https://betterdiscord.app/)
 - [BetterDiscord Documentation](https://docs.betterdiscord.app/)
 - [Issue Tracker](https://github.com/XxUnkn0wnxX/BDCLI/issues)
+- [Upstream BetterDiscord CLI](https://github.com/BetterDiscord/cli)
 
 ## Acknowledgments
 
 Built with:
 
 - [Cobra](https://github.com/spf13/cobra) - CLI framework
-- [GoReleaser](https://goreleaser.com/) - Release automation
-- [Task](https://taskfile.dev/) - Task runner
+- [GoReleaser](https://goreleaser.com/) - release automation
+- [Task](https://taskfile.dev/) - task runner
 
 ---
 
