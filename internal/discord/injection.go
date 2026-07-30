@@ -10,12 +10,15 @@ import (
 	"github.com/betterdiscord/cli/internal/output"
 )
 
-//go:embed assets/injection.js
-var injectionScript string
+//go:embed assets/app_index.js
+var appIndexScript string
+
+//go:embed assets/app_package.json
+var appPackageJSON string
 
 func (discord *DiscordInstall) inject(bd *betterdiscord.BDInstall) error {
 
-	if err := os.WriteFile(filepath.Join(discord.CorePath, "index.js"), []byte(injectionScript), 0755); err != nil {
+	if err := os.WriteFile(filepath.Join(discord.CorePath, "index.js"), []byte(appIndexScript), 0755); err != nil {
 		output.Printf("❌ Unable to write index.js in %s\n", discord.CorePath)
 		output.Printf("   %s\n", err.Error())
 		return err
