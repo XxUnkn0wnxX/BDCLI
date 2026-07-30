@@ -17,7 +17,10 @@ type DiscordInstall struct {
 
 // InstallBD installs BetterDiscord into this Discord installation
 func (discord *DiscordInstall) InstallBD(options models.InstallOptions) error {
-	bd := discord.GetBetterDiscordInstall()
+	bd, err := discord.GetBetterDiscordInstall()
+	if err != nil {
+		return err
+	}
 
 	// Make BetterDiscord folders
 	output.Println("🛠 Preparing BetterDiscord...")
@@ -64,7 +67,10 @@ func (discord *DiscordInstall) UninstallBD(options models.UninstallOptions) erro
 	output.Blank()
 
 	if options.FullUninstall {
-		install := discord.GetBetterDiscordInstall()
+		install, err := discord.GetBetterDiscordInstall()
+		if err != nil {
+			return err
+		}
 		if err := install.RemoveAll(); err != nil {
 			return err
 		}
@@ -84,11 +90,14 @@ func (discord *DiscordInstall) UninstallBD(options models.UninstallOptions) erro
 
 // RepairBD repairs BetterDiscord for this Discord installation
 func (discord *DiscordInstall) RepairBD(options models.RepairOptions) error {
-	if err := discord.UninstallBD(models.UninstallOptions{FullUninstall: false}); err != nil {
+	if err := discord.UninstallBD(models.UninstallOptions{FullUninstall: false, RestartDiscord: false}); err != nil {
 		return err
 	}
 
-	bd := discord.GetBetterDiscordInstall()
+	bd, err := discord.GetBetterDiscordInstall()
+	if err != nil {
+		return err
+	}
 
 	if err := bd.Repair(discord.Channel); err != nil {
 		return err
@@ -97,7 +106,7 @@ func (discord *DiscordInstall) RepairBD(options models.RepairOptions) error {
 	return nil
 }
 
-func (discord *DiscordInstall) GetBetterDiscordInstall() *betterdiscord.BDInstall {
+func (discord *DiscordInstall) GetBetterDiscordInstall() (*betterdiscord.BDInstall, error) {
 	// Gets the global BetterDiscord install
 	bd := betterdiscord.GetInstallation()
 
@@ -110,10 +119,10 @@ func (discord *DiscordInstall) GetBetterDiscordInstall() *betterdiscord.BDInstal
 
 		configPath, err := utils.FindSegment(discord.CorePath, segment)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 		bd = betterdiscord.GetInstallation(configPath)
 	}
 
-	return bd
+	return bd, nil
 }
