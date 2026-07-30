@@ -49,7 +49,7 @@ var installCmd = &cobra.Command{
 			}
 		}
 
-		if err := install.InstallBD(); err != nil {
+		if err := install.InstallBD(models.InstallOptions{RestartDiscord: true}); err != nil {
 			return fmt.Errorf("installation failed: %w", err)
 		}
 

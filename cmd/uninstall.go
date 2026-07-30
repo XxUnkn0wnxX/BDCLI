@@ -90,7 +90,7 @@ var uninstallCmd = &cobra.Command{
 			}
 		}
 
-		if err := install.UninstallBD(); err != nil {
+		if err := install.UninstallBD(models.UninstallOptions{FullUninstall: false, RestartDiscord: true}); err != nil {
 			return fmt.Errorf("uninstallation failed: %w", err)
 		}
 
@@ -129,7 +129,7 @@ func getAllInstalls() []*discord.DiscordInstall {
 func uninstallAll(installs []*discord.DiscordInstall) error {
 	var firstErr error
 	for _, inst := range installs {
-		if err := inst.UninstallBD(); err != nil {
+		if err := inst.UninstallBD(models.UninstallOptions{FullUninstall: false, RestartDiscord: true}); err != nil {
 			if firstErr == nil {
 				firstErr = err
 			}
