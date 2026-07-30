@@ -211,12 +211,12 @@ func TestGetSuggestedPath(t *testing.T) {
 	newCorePath := "/home/user/.config/discord/app-0.0.35/modules/discord_desktop_core-1/discord_desktop_core/core.asar"
 
 	allDiscordInstalls[models.Stable] = []*DiscordInstall{
-		{CorePath: oldCorePath, Version: "0.0.35"},
-		{CorePath: "/usr/share/discord/0.0.34", Version: "0.0.34"},
+		{ResourcesPath: oldCorePath, Version: "0.0.35"},
+		{ResourcesPath: "/usr/share/discord/0.0.34", Version: "0.0.34"},
 	}
 
 	allDiscordInstalls[models.Canary] = []*DiscordInstall{
-		{CorePath: newCorePath, Version: "0.0.200"}, // New format
+		{ResourcesPath: newCorePath, Version: "0.0.200"}, // New format
 	}
 
 	// Test that it returns the first install (old format)
@@ -261,14 +261,14 @@ func TestResolvePath(t *testing.T) {
 
 	// Add a test install with new path format
 	testInstall := &DiscordInstall{
-		CorePath: "/home/user/.config/discord/app-1.0.0/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
+		ResourcesPath: "/home/user/.config/discord/app-1.0.0/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
 		Channel:  models.Stable,
 		Version:  "1.0.0",
 	}
 	allDiscordInstalls[models.Stable] = []*DiscordInstall{testInstall}
 
 	// Test resolving existing path
-	result := ResolvePath(testInstall.CorePath)
+	result := ResolvePath(testInstall.ResourcesPath)
 	if result != testInstall {
 		t.Error("ResolvePath should return the existing install")
 	}
@@ -394,9 +394,9 @@ func TestSortInstalls(t *testing.T) {
 
 	// Add unsorted installs - mix of old and new path formats
 	allDiscordInstalls[models.Stable] = []*DiscordInstall{
-		{CorePath: "/path1", Version: "0.0.34", Channel: models.Stable},                                                                                              // Old format
-		{CorePath: "/home/user/.config/discord/app-0.0.36/modules/discord_desktop_core-1/discord_desktop_core/core.asar", Version: "0.0.36", Channel: models.Stable}, // New format
-		{CorePath: "/path3", Version: "0.0.35", Channel: models.Stable},                                                                                              // Old format
+		{ResourcesPath: "/path1", Version: "0.0.34", Channel: models.Stable},                                                                                              // Old format
+		{ResourcesPath: "/home/user/.config/discord/app-0.0.36/modules/discord_desktop_core-1/discord_desktop_core/core.asar", Version: "0.0.36", Channel: models.Stable}, // New format
+		{ResourcesPath: "/path3", Version: "0.0.35", Channel: models.Stable},                                                                                              // Old format
 	}
 
 	// Sort them
@@ -425,14 +425,14 @@ func TestSortInstalls_MultipleChannels(t *testing.T) {
 
 	// Add unsorted installs for multiple channels - mix of old and new formats
 	allDiscordInstalls[models.Stable] = []*DiscordInstall{
-		{CorePath: "/stable1", Version: "1.0.0", Channel: models.Stable},
-		{CorePath: "/home/user/.config/discord/app-1.0.2/modules/discord_desktop_core-1/discord_desktop_core/core.asar", Version: "1.0.2", Channel: models.Stable}, // New format
+		{ResourcesPath: "/stable1", Version: "1.0.0", Channel: models.Stable},
+		{ResourcesPath: "/home/user/.config/discord/app-1.0.2/modules/discord_desktop_core-1/discord_desktop_core/core.asar", Version: "1.0.2", Channel: models.Stable}, // New format
 	}
 
 	allDiscordInstalls[models.Canary] = []*DiscordInstall{
-		{CorePath: "/canary1", Version: "0.0.100", Channel: models.Canary},
-		{CorePath: "/home/user/.config/discordcanary/app-0.0.150/modules/discord_desktop_core-1/discord_desktop_core/core.asar", Version: "0.0.150", Channel: models.Canary}, // New format
-		{CorePath: "/canary3", Version: "0.0.125", Channel: models.Canary},
+		{ResourcesPath: "/canary1", Version: "0.0.100", Channel: models.Canary},
+		{ResourcesPath: "/home/user/.config/discordcanary/app-0.0.150/modules/discord_desktop_core-1/discord_desktop_core/core.asar", Version: "0.0.150", Channel: models.Canary}, // New format
+		{ResourcesPath: "/canary3", Version: "0.0.125", Channel: models.Canary},
 	}
 
 	// Sort them

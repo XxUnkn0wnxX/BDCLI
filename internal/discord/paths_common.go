@@ -75,7 +75,7 @@ func validateWindowsStyleInstall(proposed string) *DiscordInstall {
 	// Verify the path and core.asar exist
 	if utils.Exists(finalPath) && utils.Exists(filepath.Join(finalPath, "core.asar")) {
 		return &DiscordInstall{
-			CorePath:  finalPath,
+			ResourcesPath:  finalPath,
 			Channel:   GetChannel(finalPath),
 			Version:   GetVersion(finalPath),
 			IsFlatpak: false,
@@ -199,7 +199,7 @@ func validateUnixStyleInstall(proposed string, detectFlatpak bool, detectSnap bo
 		}
 
 		return &DiscordInstall{
-			CorePath:  finalPath,
+			ResourcesPath:  finalPath,
 			Channel:   GetChannel(finalPath),
 			Version:   GetVersion(finalPath),
 			IsFlatpak: isFlatpak,

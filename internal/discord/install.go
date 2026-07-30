@@ -8,7 +8,7 @@ import (
 )
 
 type DiscordInstall struct {
-	CorePath  string                `json:"corePath"`
+	ResourcesPath  string                `json:"corePath"`
 	Channel   models.DiscordChannel `json:"channel"`
 	Version   string                `json:"version"`
 	IsFlatpak bool                  `json:"isFlatpak"`
@@ -117,7 +117,7 @@ func (discord *DiscordInstall) GetBetterDiscordInstall() (*betterdiscord.BDInsta
 			segment = ".config"
 		}
 
-		configPath, err := utils.FindSegment(discord.CorePath, segment)
+		configPath, err := utils.FindSegment(discord.ResourcesPath, segment)
 		if err != nil {
 			return nil, err
 		}

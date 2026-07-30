@@ -18,18 +18,18 @@ var appPackageJSON string
 
 func (discord *DiscordInstall) inject(bd *betterdiscord.BDInstall) error {
 
-	if err := os.WriteFile(filepath.Join(discord.CorePath, "index.js"), []byte(appIndexScript), 0755); err != nil {
-		output.Printf("❌ Unable to write index.js in %s\n", discord.CorePath)
+	if err := os.WriteFile(filepath.Join(discord.ResourcesPath, "index.js"), []byte(appIndexScript), 0755); err != nil {
+		output.Printf("❌ Unable to write index.js in %s\n", discord.ResourcesPath)
 		output.Printf("   %s\n", err.Error())
 		return err
 	}
 
-	output.Printf("✅ Injected into %s\n", discord.CorePath)
+	output.Printf("✅ Injected into %s\n", discord.ResourcesPath)
 	return nil
 }
 
 func (discord *DiscordInstall) uninject() error {
-	indexFile := filepath.Join(discord.CorePath, "index.js")
+	indexFile := filepath.Join(discord.ResourcesPath, "index.js")
 
 	contents, err := os.ReadFile(indexFile)
 
@@ -53,7 +53,7 @@ func (discord *DiscordInstall) uninject() error {
 
 // TODO: consider putting this in the betterdiscord package
 func (discord *DiscordInstall) IsInjected() bool {
-	indexFile := filepath.Join(discord.CorePath, "index.js")
+	indexFile := filepath.Join(discord.ResourcesPath, "index.js")
 	contents, err := os.ReadFile(indexFile)
 	if err != nil {
 		return false

@@ -49,7 +49,7 @@ func GetChannel(proposed string) models.DiscordChannel {
 
 func GetSuggestedPath(channel models.DiscordChannel) string {
 	if len(allDiscordInstalls[channel]) > 0 {
-		return allDiscordInstalls[channel][0].CorePath
+		return allDiscordInstalls[channel][0].ResourcesPath
 	}
 	return ""
 }
@@ -61,7 +61,7 @@ func AddCustomPath(proposed string) *DiscordInstall {
 	}
 
 	// Check if this already exists in our list and return reference
-	index := slices.IndexFunc(allDiscordInstalls[result.Channel], func(d *DiscordInstall) bool { return d.CorePath == result.CorePath })
+	index := slices.IndexFunc(allDiscordInstalls[result.Channel], func(d *DiscordInstall) bool { return d.ResourcesPath == result.ResourcesPath })
 	if index >= 0 {
 		return allDiscordInstalls[result.Channel][index]
 	}
@@ -75,7 +75,7 @@ func AddCustomPath(proposed string) *DiscordInstall {
 
 func ResolvePath(proposed string) *DiscordInstall {
 	for channel := range allDiscordInstalls {
-		index := slices.IndexFunc(allDiscordInstalls[channel], func(d *DiscordInstall) bool { return d.CorePath == proposed })
+		index := slices.IndexFunc(allDiscordInstalls[channel], func(d *DiscordInstall) bool { return d.ResourcesPath == proposed })
 		if index >= 0 {
 			return allDiscordInstalls[channel][index]
 		}
