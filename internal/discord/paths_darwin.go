@@ -3,24 +3,25 @@ package discord
 import (
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/betterdiscord/cli/internal/models"
 )
 
 func init() {
-	config, _ := os.UserConfigDir()
-	paths := []string{
-		filepath.Join(config, "{channel}"),
+	home, _ := os.UserHomeDir()
+
+	// On macOS the app.asar lives inside the application bundle
+	// (Discord.app/Contents/Resources), not under Application Support. Search the
+	// standard install locations for each channel's bundle.
+	bases := []string{
+		filepath.Join("/", "Applications"),
+		filepath.Join(home, "Applications"),
 	}
 
 	for _, channel := range models.Channels {
-		for _, path := range paths {
-			folder := strings.ReplaceAll(strings.ToLower(channel.Name()), " ", "")
-			searchPaths = append(
-				searchPaths,
-				strings.ReplaceAll(path, "{channel}", folder),
-			)
+		bundle := channel.Name() + ".app"
+		for _, base := range bases {
+			searchPaths = append(searchPaths, filepath.Join(base, bundle))
 		}
 	}
 

@@ -89,6 +89,11 @@ func resolveResources(proposed string) string {
 		return res
 	}
 
+	// A macOS app bundle: app.asar lives in Contents/Resources.
+	if res := filepath.Join(proposed, "Contents", "Resources"); hasAppAsar(res) {
+		return res
+	}
+
 	// A base containing versioned app dirs (Windows Discord root, Linux channel dir).
 	if latest := latestAppDir(proposed); latest != "" {
 		if res := filepath.Join(proposed, latest, "resources"); hasAppAsar(res) {

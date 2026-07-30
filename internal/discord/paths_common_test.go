@@ -143,6 +143,34 @@ func TestValidateUnixStyleInstall_FlatpakDetection(t *testing.T) {
 	}
 }
 
+func TestValidateUnixStyleInstall_MacOSBundle(t *testing.T) {
+	// macOS: app.asar lives in {Bundle}.app/Contents/Resources; channel/version
+	// come from build_info.json (the bundle name has a space and no version).
+	tmpDir := t.TempDir()
+	bundle := filepath.Join(tmpDir, "Discord Canary.app")
+	resources := filepath.Join(bundle, "Contents", "Resources")
+	writeAppAsar(t, resources)
+	if err := os.WriteFile(filepath.Join(resources, "build_info.json"),
+		[]byte(`{"releaseChannel":"canary","version":"1.0.1"}`), 0644); err != nil {
+		t.Fatalf("write build_info: %v", err)
+	}
+
+	// Resolving from the bundle path (as a user browsing to Discord.app would).
+	result := validateUnixStyleInstall(bundle, false, false)
+	if result == nil {
+		t.Fatalf("Expected install for bundle %s", bundle)
+	}
+	if result.ResourcesPath != resources {
+		t.Errorf("ResourcesPath = %s, expected %s", result.ResourcesPath, resources)
+	}
+	if result.Channel != models.Canary {
+		t.Errorf("Channel = %v, expected Canary", result.Channel)
+	}
+	if result.Version != "1.0.1" {
+		t.Errorf("Version = %q, expected 1.0.1", result.Version)
+	}
+}
+
 func TestReadBuildInfo(t *testing.T) {
 	t.Run("present", func(t *testing.T) {
 		dir := t.TempDir()

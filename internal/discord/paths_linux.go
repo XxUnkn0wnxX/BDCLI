@@ -13,33 +13,29 @@ func init() {
 	config, _ := os.UserConfigDir()
 	home, _ := os.UserHomeDir()
 	paths := []string{
-		// Native. Data is stored under `~/.config`.
+		// Native. The new updater lays out versioned app dirs under `~/.config`.
 		// Example: `~/.config/discordcanary`.
-		// Core: `~/.config/discordcanary/0.0.90/modules/discord_desktop_core/core.asar`.
-		// Updated Core: `~/.config/discordcanary/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar`.
+		// Resources: `~/.config/discordcanary/app-0.0.90/resources/app.asar`.
 		filepath.Join(config, "{channel}"),
 
-		// Flatpak. These user data paths are universal for all Flatpak installations on all machines.
-		// Example: `.var/app/com.discordapp.DiscordCanary/config/discordcanary`.
-		// Core: `.var/app/com.discordapp.DiscordCanary/config/discordcanary/0.0.90/modules/discord_desktop_core/core.asar`
-		// Updated Core: `.var/app/com.discordapp.DiscordCanary/config/discordcanary/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar`.
-		filepath.Join(home, ".var", "app", "com.discordapp.{CHANNEL}", "config", "{channel}"),
+		// Flatpak (global). The app.asar lives in the read-only deployment files.
+		// Example: `/var/lib/flatpak/app/com.discordapp.DiscordCanary/current/active/files/discord-canary/resources/app.asar`.
+		filepath.Join("/var", "lib", "flatpak", "app", "com.discordapp.{CHANNEL}", "current", "active", "files", "{channel-}", "resources"),
 
-		// Snap. Just like with Flatpaks, these paths are universal for all Snap installations.
-		// Example: `snap/discord/current/.config/discord`.
-		// Example: `snap/discord-canary/current/.config/discordcanary`.
-		// Core: `snap/discord-canary/current/.config/discordcanary/0.0.90/modules/discord_desktop_core/core.asar`.
-		// Updated Core: `snap/discord-canary/current/.config/discordcanary/app-0.0.90/modules/discord_desktop_core-1/discord_desktop_core/core.asar`.
-		// NOTE: Snap user data always exists, even when the Snap isn't mounted/running.
-		filepath.Join(home, "snap", "{channel-}", "current", ".config", "{channel}"),
+		// Flatpak (user). Same layout under the per-user flatpak tree (writable).
+		// Example: `~/.local/share/flatpak/app/com.discordapp.DiscordCanary/current/active/files/discord-canary/resources/app.asar`.
+		filepath.Join(home, ".local", "share", "flatpak", "app", "com.discordapp.{CHANNEL}", "current", "active", "files", "{channel-}", "resources"),
+
+		// Snap is intentionally omitted: its read-only squashfs mount can't host
+		// the app.asar shadow, so the new injection method does not support it.
 	}
 
 	if wsl.IsWSL() {
 		winHome, err := wsl.WindowsHome()
 		if err == nil && winHome != "" {
-			// WSL. Data is stored under the Windows user's AppData folder.
+			// WSL. Windows Discord installs under the Windows user's AppData folder.
 			// Example: `/mnt/c/Users/Username/AppData/Local/DiscordCanary`.
-			// Core: `/mnt/c/Users/Username/AppData/Local/DiscordCanary/app-1.0.9218/modules/discord_desktop_core-1/discord_desktop_core core.asar`.
+			// Resources: `/mnt/c/Users/Username/AppData/Local/DiscordCanary/app-1.0.9218/resources/app.asar`.
 			paths = append(paths, filepath.Join(winHome, "AppData", "Local", "{CHANNEL}"))
 		}
 	}

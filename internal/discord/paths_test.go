@@ -151,6 +151,18 @@ func TestGetChannel(t *testing.T) {
 			path:     "",
 			expected: models.Stable,
 		},
+
+		// New injection
+		{
+			name:     "macOS bundle name",
+			path:     filepath.Join("/Applications", "Discord Canary.app", "Contents", "Resources"),
+			expected: models.Canary,
+		},
+		{
+			name:     "macOS stable bundle name",
+			path:     filepath.Join("/Applications", "Discord.app", "Contents", "Resources"),
+			expected: models.Stable,
+		},
 	}
 
 	for _, tt := range tests {

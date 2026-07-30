@@ -1,10 +1,13 @@
 package discord
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/betterdiscord/cli/internal/betterdiscord"
 	"github.com/betterdiscord/cli/internal/models"
 	"github.com/betterdiscord/cli/internal/output"
-	"github.com/betterdiscord/cli/internal/utils"
 )
 
 type DiscordInstall struct {
@@ -110,17 +113,18 @@ func (discord *DiscordInstall) GetBetterDiscordInstall() (*betterdiscord.BDInsta
 	// Gets the global BetterDiscord install
 	bd := betterdiscord.GetInstallation()
 
-	// Snaps and flatpaks get their own local BD install
-	if discord.IsSnap || discord.IsFlatpak {
-		segment := "config"
-		if discord.IsSnap {
-			segment = ".config"
-		}
-
-		configPath, err := utils.FindSegment(discord.ResourcesPath, segment)
+	// Flatpaks get their own local BD folder. The resources path is in the
+	// read-only deployment tree, so we can't derive the sandbox config from it;
+	// instead we compute the stable ~/.var/app/{id}/config location from the
+	// channel. Inside the sandbox this dir is the app's $XDG_CONFIG_HOME, which
+	// is exactly where the injected index.js looks for BetterDiscord at runtime.
+	if discord.IsFlatpak {
+		home, err := os.UserHomeDir()
 		if err != nil {
 			return nil, err
 		}
+		id := "com.discordapp." + strings.ReplaceAll(discord.Channel.Name(), " ", "")
+		configPath := filepath.Join(home, ".var", "app", id, "config")
 		bd = betterdiscord.GetInstallation(configPath)
 	}
 
