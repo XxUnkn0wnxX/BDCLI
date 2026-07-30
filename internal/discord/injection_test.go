@@ -4,148 +4,230 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/betterdiscord/cli/internal/models"
+	"github.com/betterdiscord/cli/internal/utils"
 )
 
-const defaultIndexJS = `module.exports = require("./core.asar");`
+// newResourcesDir creates a resources dir seeded with an app.asar of known
+// content and returns the dir plus the original content.
+func newResourcesDir(t *testing.T) (string, []byte) {
+	t.Helper()
+	resources := t.TempDir()
+	content := []byte("original discord app.asar")
+	if err := os.WriteFile(filepath.Join(resources, "app.asar"), content, 0o644); err != nil {
+		t.Fatalf("failed to seed app.asar: %v", err)
+	}
+	return resources, content
+}
 
 func TestIsInjected(t *testing.T) {
-	tmpDir := t.TempDir()
-	resourcesPath := filepath.Join(tmpDir, "discord_desktop_core")
-	if err := os.MkdirAll(resourcesPath, 0755); err != nil {
-		t.Fatalf("Failed to create core path: %v", err)
-	}
-	indexFile := filepath.Join(resourcesPath, "index.js")
-
-	install := &DiscordInstall{
-		ResourcesPath: resourcesPath,
-		Channel:  models.Stable,
-	}
+	resources := t.TempDir()
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
 
 	if install.IsInjected() {
-		t.Fatalf("Expected IsInjected to be false with missing index.js")
+		t.Fatal("expected IsInjected false for a bare resources dir")
 	}
 
-	if err := os.WriteFile(indexFile, []byte(`module.exports = require("./core.asar");`), 0644); err != nil {
-		t.Fatalf("Failed to write index.js: %v", err)
+	// Only the app/ entry, no preserved asar → not injected.
+	if err := os.MkdirAll(filepath.Join(resources, "app"), 0o755); err != nil {
+		t.Fatalf("mkdir app: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(resources, "app", "index.js"), []byte("x"), 0o644); err != nil {
+		t.Fatalf("write index.js: %v", err)
 	}
 	if install.IsInjected() {
-		t.Fatalf("Expected IsInjected to be false for default index.js")
+		t.Fatal("expected IsInjected false without a preserved app.asar")
 	}
 
-	if err := os.WriteFile(indexFile, []byte(`// BetterDiscord injected`), 0644); err != nil {
-		t.Fatalf("Failed to write injection index.js: %v", err)
+	// Add the preserved asar → injected.
+	if err := os.WriteFile(filepath.Join(resources, "betterdiscord.app.asar"), []byte("x"), 0o644); err != nil {
+		t.Fatalf("write preserved asar: %v", err)
 	}
 	if !install.IsInjected() {
-		t.Fatalf("Expected IsInjected to be true when BetterDiscord is present")
+		t.Fatal("expected IsInjected true with app/index.js + preserved asar")
 	}
 }
 
-func TestInject_WritesInjectionScript(t *testing.T) {
-	resourcesPath := t.TempDir()
-	install := &DiscordInstall{ResourcesPath: resourcesPath, Channel: models.Stable}
+func TestInject_Clean(t *testing.T) {
+	resources, original := newResourcesDir(t)
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
 
-	// bd is unused by inject(); nil is fine.
 	if err := install.inject(nil); err != nil {
 		t.Fatalf("inject() failed: %v", err)
 	}
 
+	if utils.Exists(filepath.Join(resources, "app.asar")) {
+		t.Error("expected original app.asar to be renamed away")
+	}
+	preserved, err := os.ReadFile(filepath.Join(resources, "betterdiscord.app.asar"))
+	if err != nil {
+		t.Fatalf("preserved asar missing: %v", err)
+	}
+	if string(preserved) != string(original) {
+		t.Errorf("preserved asar content = %q, expected %q", preserved, original)
+	}
+	if !utils.Exists(filepath.Join(resources, "app", "index.js")) {
+		t.Error("app/index.js not written")
+	}
+	if !utils.Exists(filepath.Join(resources, "app", "package.json")) {
+		t.Error("app/package.json not written")
+	}
 	if !install.IsInjected() {
-		t.Fatal("expected IsInjected() to be true after inject()")
+		t.Error("expected IsInjected true after inject()")
 	}
 
-	info, err := os.Stat(filepath.Join(resourcesPath, "index.js"))
-	if err != nil {
-		t.Fatalf("index.js not written: %v", err)
-	}
-	// The require target must not carry the executable bit.
-	if runtime.GOOS != "windows" {
-		if perm := info.Mode().Perm(); perm != 0o644 {
-			t.Errorf("index.js mode = %o, expected 644", perm)
-		}
+	// index.js must reference the preserved app and the BD asar.
+	index, _ := os.ReadFile(filepath.Join(resources, "app", "index.js"))
+	if want := "../betterdiscord.app.asar"; !strings.Contains(string(index), want) {
+		t.Errorf("index.js missing %q", want)
 	}
 }
 
-func TestUninject_RemovesInjection(t *testing.T) {
-	resourcesPath := t.TempDir()
-	install := &DiscordInstall{ResourcesPath: resourcesPath, Channel: models.Stable}
-	indexFile := filepath.Join(resourcesPath, "index.js")
+func TestInject_Idempotent(t *testing.T) {
+	resources, original := newResourcesDir(t)
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
 
-	seed := `require("BetterDiscord/data/betterdiscord.asar");` + "\n" + defaultIndexJS
-	if err := os.WriteFile(indexFile, []byte(seed), 0o644); err != nil {
-		t.Fatalf("failed to seed injected index.js: %v", err)
+	if err := install.inject(nil); err != nil {
+		t.Fatalf("first inject() failed: %v", err)
+	}
+	// Corrupt the shadow index.js so we can confirm the second inject rewrites it
+	// without re-renaming (which would clobber the real, already-preserved asar).
+	if err := os.WriteFile(filepath.Join(resources, "app", "index.js"), []byte("stale"), 0o644); err != nil {
+		t.Fatalf("corrupt index.js: %v", err)
 	}
 
-	if err := install.uninject(); err != nil {
-		t.Fatalf("uninject() failed: %v", err)
+	if err := install.inject(nil); err != nil {
+		t.Fatalf("second inject() failed: %v", err)
 	}
 
-	contents, err := os.ReadFile(indexFile)
-	if err != nil {
-		t.Fatalf("index.js missing after uninject: %v", err)
+	preserved, _ := os.ReadFile(filepath.Join(resources, "betterdiscord.app.asar"))
+	if string(preserved) != string(original) {
+		t.Errorf("preserved asar was clobbered on re-inject: got %q", preserved)
 	}
-	if string(contents) != defaultIndexJS {
-		t.Errorf("index.js after uninject = %q, expected %q", string(contents), defaultIndexJS)
+	index, _ := os.ReadFile(filepath.Join(resources, "app", "index.js"))
+	if string(index) == "stale" {
+		t.Error("expected index.js to be rewritten on re-inject")
 	}
-	if install.IsInjected() {
-		t.Error("expected IsInjected() to be false after uninject()")
-	}
-}
-
-func TestUninject_LeavesUninjectedFileUntouched(t *testing.T) {
-	resourcesPath := t.TempDir()
-	install := &DiscordInstall{ResourcesPath: resourcesPath, Channel: models.Stable}
-	indexFile := filepath.Join(resourcesPath, "index.js")
-
-	original := `module.exports = require("./some-other-core.asar");`
-	if err := os.WriteFile(indexFile, []byte(original), 0o644); err != nil {
-		t.Fatalf("failed to seed index.js: %v", err)
-	}
-
-	if err := install.uninject(); err != nil {
-		t.Fatalf("uninject() failed: %v", err)
-	}
-
-	contents, _ := os.ReadFile(indexFile)
-	if string(contents) != original {
-		t.Errorf("uninject rewrote a file with no BetterDiscord marker: got %q", string(contents))
+	if utils.Exists(filepath.Join(resources, "app.asar")) {
+		t.Error("re-inject must not recreate a live app.asar")
 	}
 }
 
-func TestUninject_MissingFileWritesDefault(t *testing.T) {
-	resourcesPath := t.TempDir()
-	install := &DiscordInstall{ResourcesPath: resourcesPath, Channel: models.Stable}
-
-	// No index.js exists; uninject falls through and writes the default stub.
-	if err := install.uninject(); err != nil {
-		t.Fatalf("uninject() failed: %v", err)
-	}
-
-	contents, err := os.ReadFile(filepath.Join(resourcesPath, "index.js"))
-	if err != nil {
-		t.Fatalf("expected index.js to be created: %v", err)
-	}
-	if string(contents) != defaultIndexJS {
-		t.Errorf("index.js = %q, expected %q", string(contents), defaultIndexJS)
-	}
-}
-
-func TestInjectUninject_RoundTrip(t *testing.T) {
-	resourcesPath := t.TempDir()
-	install := &DiscordInstall{ResourcesPath: resourcesPath, Channel: models.Stable}
+func TestUninject_RestoresExactly(t *testing.T) {
+	resources, original := newResourcesDir(t)
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
 
 	if err := install.inject(nil); err != nil {
 		t.Fatalf("inject() failed: %v", err)
 	}
-	if !install.IsInjected() {
-		t.Fatal("expected injected after inject()")
-	}
 	if err := install.uninject(); err != nil {
 		t.Fatalf("uninject() failed: %v", err)
 	}
+
+	restored, err := os.ReadFile(filepath.Join(resources, "app.asar"))
+	if err != nil {
+		t.Fatalf("app.asar not restored: %v", err)
+	}
+	if string(restored) != string(original) {
+		t.Errorf("restored app.asar = %q, expected %q", restored, original)
+	}
+	if utils.Exists(filepath.Join(resources, "betterdiscord.app.asar")) {
+		t.Error("preserved asar should be gone after uninject")
+	}
+	if utils.Exists(filepath.Join(resources, "app")) {
+		t.Error("shadow app/ should be removed after uninject")
+	}
 	if install.IsInjected() {
-		t.Fatal("expected not injected after uninject()")
+		t.Error("expected IsInjected false after uninject()")
+	}
+}
+
+func TestUninject_NotInjectedIsNoop(t *testing.T) {
+	resources, original := newResourcesDir(t)
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
+
+	if err := install.uninject(); err != nil {
+		t.Fatalf("uninject() on a clean install failed: %v", err)
+	}
+
+	// A never-injected install keeps its app.asar untouched.
+	got, _ := os.ReadFile(filepath.Join(resources, "app.asar"))
+	if string(got) != string(original) {
+		t.Errorf("uninject touched a clean app.asar: got %q", got)
+	}
+}
+
+func TestInject_NoAppAsarErrors(t *testing.T) {
+	resources := t.TempDir() // empty, no app.asar
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
+
+	if err := install.inject(nil); err == nil {
+		t.Fatal("expected an error when no app.asar is present")
+	}
+	if utils.Exists(filepath.Join(resources, "app")) {
+		t.Error("no shadow app/ should be created when there's nothing to inject")
+	}
+}
+
+func TestInject_ProbeFailAbortsBeforeRename(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod-based write denial is unreliable on Windows")
+	}
+	if os.Geteuid() == 0 {
+		t.Skip("running as root bypasses directory write permissions")
+	}
+	resources, original := newResourcesDir(t)
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
+
+	if err := os.Chmod(resources, 0o555); err != nil {
+		t.Fatalf("chmod: %v", err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(resources, 0o755) })
+
+	if err := install.inject(nil); err == nil {
+		t.Fatal("expected inject to fail the writability probe")
+	}
+
+	// The bundle must be untouched: app.asar still present, nothing renamed.
+	_ = os.Chmod(resources, 0o755)
+	got, err := os.ReadFile(filepath.Join(resources, "app.asar"))
+	if err != nil {
+		t.Fatalf("app.asar was disturbed by a probe-failed inject: %v", err)
+	}
+	if string(got) != string(original) {
+		t.Errorf("app.asar content changed: got %q", got)
+	}
+	if utils.Exists(filepath.Join(resources, "betterdiscord.app.asar")) {
+		t.Error("no rename should have happened after a probe failure")
+	}
+}
+
+func TestInject_RollbackOnMidOpFailure(t *testing.T) {
+	resources, original := newResourcesDir(t)
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
+
+	// Block mkdir(resources/app) by pre-creating a regular file at that path.
+	// This forces a failure *after* the app.asar rename, exercising rollback.
+	if err := os.WriteFile(filepath.Join(resources, "app"), []byte("blocker"), 0o644); err != nil {
+		t.Fatalf("seed blocker file: %v", err)
+	}
+
+	if err := install.inject(nil); err == nil {
+		t.Fatal("expected inject to fail when app/ can't be created")
+	}
+
+	// Rollback must restore the original app.asar and drop the preserved copy.
+	restored, err := os.ReadFile(filepath.Join(resources, "app.asar"))
+	if err != nil {
+		t.Fatalf("app.asar not restored after rollback: %v", err)
+	}
+	if string(restored) != string(original) {
+		t.Errorf("restored app.asar = %q, expected %q", restored, original)
+	}
+	if utils.Exists(filepath.Join(resources, "betterdiscord.app.asar")) {
+		t.Error("preserved asar should be gone after rollback")
 	}
 }

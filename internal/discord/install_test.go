@@ -9,28 +9,37 @@ import (
 	"github.com/betterdiscord/cli/internal/models"
 )
 
-// UninstallBD with neither full-uninstall nor restart should only de-inject the
-// core's index.js — the safe path that never touches the global BD folder or
+// UninstallBD with neither full-uninstall nor restart should only revert the
+// app.asar shadow — the safe path that never touches the global BD folder or
 // the running Discord process.
 func TestUninstallBD_UninjectOnly(t *testing.T) {
-	corePath := t.TempDir()
-	indexFile := filepath.Join(corePath, "index.js")
-	seed := `require("BetterDiscord/data/betterdiscord.asar");` + "\n" + `module.exports = require("./core.asar");`
-	if err := os.WriteFile(indexFile, []byte(seed), 0o644); err != nil {
-		t.Fatalf("failed to seed injected index.js: %v", err)
+	resources := t.TempDir()
+	// Seed an injected state: preserved asar + shadow app/ entry.
+	original := []byte("original app.asar")
+	if err := os.WriteFile(filepath.Join(resources, "betterdiscord.app.asar"), original, 0o644); err != nil {
+		t.Fatalf("seed preserved asar: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(resources, "app"), 0o755); err != nil {
+		t.Fatalf("mkdir app: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(resources, "app", "index.js"), []byte("x"), 0o644); err != nil {
+		t.Fatalf("seed index.js: %v", err)
 	}
 
-	install := &DiscordInstall{ResourcesPath: corePath, Channel: models.Stable}
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
 	if err := install.UninstallBD(models.UninstallOptions{FullUninstall: false, RestartDiscord: false}); err != nil {
 		t.Fatalf("UninstallBD() failed: %v", err)
 	}
 
 	if install.IsInjected() {
-		t.Error("expected index.js to be de-injected after UninstallBD")
+		t.Error("expected the shadow to be reverted after UninstallBD")
 	}
-	contents, _ := os.ReadFile(indexFile)
-	if want := `module.exports = require("./core.asar");`; string(contents) != want {
-		t.Errorf("index.js after uninstall = %q, expected %q", string(contents), want)
+	restored, err := os.ReadFile(filepath.Join(resources, "app.asar"))
+	if err != nil {
+		t.Fatalf("app.asar not restored: %v", err)
+	}
+	if string(restored) != string(original) {
+		t.Errorf("app.asar after uninstall = %q, expected %q", restored, original)
 	}
 }
 
