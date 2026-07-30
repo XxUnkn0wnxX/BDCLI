@@ -1,9 +1,9 @@
-// BetterDiscord's Injection Script
+// BetterDiscord's Injection Script (app.asar method)
 const path = require("path");
 const electron = require("electron");
 
-// Windows and macOS both use the fixed global BetterDiscord folder but
-// Electron gives the postfixed version of userData, so go up a directory
+// The global BetterDiscord folder lives one directory above userData (the
+// appData root). Electron gives the postfixed userData, so go up a directory.
 let userConfig = path.join(electron.app.getPath("userData"), "..");
 
 // If we're on Linux there are a couple cases to deal with
@@ -14,5 +14,5 @@ if (process.platform !== "win32" && process.platform !== "darwin") {
 
 require(path.join(userConfig, "BetterDiscord", "data", "betterdiscord.asar"));
 
-// Discord's Default Export
-module.exports = require("./core.asar");
+// Hand off to Discord's real (renamed) app entry point
+module.exports = require("../betterdiscord.app.asar");
