@@ -19,6 +19,48 @@ func writeAppAsar(t *testing.T, resourcesDir string) {
 	}
 }
 
+// writeInjectedResources creates a resources dir in the *injected* state:
+// app.asar has been renamed to betterdiscord.app.asar and a shadow app/ exists.
+func writeInjectedResources(t *testing.T, resourcesDir string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Join(resourcesDir, "app"), 0755); err != nil {
+		t.Fatalf("Failed to create app dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(resourcesDir, "betterdiscord.app.asar"), []byte("preserved"), 0644); err != nil {
+		t.Fatalf("Failed to write preserved asar: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(resourcesDir, "app", "index.js"), []byte("// bd"), 0644); err != nil {
+		t.Fatalf("Failed to write index.js: %v", err)
+	}
+}
+
+// Regression: an install stays resolvable after injection (app.asar renamed to
+// betterdiscord.app.asar). If it didn't, users couldn't repair or uninstall it.
+func TestValidateWindowsStyleInstall_ResolvesInjected(t *testing.T) {
+	tmpDir := t.TempDir()
+	root := filepath.Join(tmpDir, "Discord")
+	resources := filepath.Join(root, "app-1.0.9002", "resources")
+	writeInjectedResources(t, resources) // no app.asar, only betterdiscord.app.asar
+
+	result := validateWindowsStyleInstall(root)
+	if result == nil {
+		t.Fatalf("injected install must still resolve for %s", root)
+	}
+	if result.ResourcesPath != resources {
+		t.Errorf("ResourcesPath = %s, expected %s", result.ResourcesPath, resources)
+	}
+}
+
+func TestResolveResources_InjectedResourcesDir(t *testing.T) {
+	// Browsing/uninstalling straight to an injected resources dir must resolve.
+	resources := filepath.Join(t.TempDir(), "resources")
+	writeInjectedResources(t, resources)
+
+	if got := resolveResources(resources); got != resources {
+		t.Errorf("resolveResources(injected) = %q, expected %q", got, resources)
+	}
+}
+
 func TestValidateWindowsStyleInstall_FromDiscordRoot(t *testing.T) {
 	tmpDir := t.TempDir()
 	root := filepath.Join(tmpDir, "Discord")

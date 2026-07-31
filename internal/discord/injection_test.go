@@ -205,6 +205,45 @@ func TestInject_ProbeFailAbortsBeforeRename(t *testing.T) {
 	}
 }
 
+// Regression for the "invisible after injection" bug: injecting renames app.asar
+// to betterdiscord.app.asar, so a resolver anchored only on app.asar would fail
+// to find the install afterward — breaking repair and, critically, uninstall.
+func TestInjectThenResolve_RemainsDiscoverable(t *testing.T) {
+	tmpDir := t.TempDir()
+	root := filepath.Join(tmpDir, "Discord")
+	resources := filepath.Join(root, "app-1.0.9002", "resources")
+	writeAppAsar(t, resources) // pristine install
+
+	if validateWindowsStyleInstall(root) == nil {
+		t.Fatal("precondition: pristine install should resolve")
+	}
+
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
+	if err := install.inject(nil); err != nil {
+		t.Fatalf("inject: %v", err)
+	}
+
+	// The fix: it must still resolve from the top-level Discord root after injection.
+	resolved := validateWindowsStyleInstall(root)
+	if resolved == nil {
+		t.Fatal("injected install no longer resolves — uninstall would be impossible")
+	}
+	if resolved.ResourcesPath != resources {
+		t.Errorf("ResourcesPath = %s, expected %s", resolved.ResourcesPath, resources)
+	}
+	if !resolved.IsInjected() {
+		t.Error("expected the resolved install to report IsInjected")
+	}
+
+	// And uninstall works from the resolved install.
+	if err := resolved.uninject(); err != nil {
+		t.Fatalf("uninject: %v", err)
+	}
+	if !utils.Exists(filepath.Join(resources, "app.asar")) {
+		t.Error("app.asar not restored after uninject")
+	}
+}
+
 func TestInject_RollbackOnMidOpFailure(t *testing.T) {
 	resources, original := newResourcesDir(t)
 	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}

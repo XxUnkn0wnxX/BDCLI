@@ -34,9 +34,17 @@ func readBuildInfo(resourcesDir string) (buildInfo, bool) {
 	return info, true
 }
 
-// hasAppAsar reports whether dir contains Discord's app.asar.
-func hasAppAsar(dir string) bool {
-	return utils.Exists(filepath.Join(dir, "app.asar"))
+// hasDiscordApp reports whether dir is a Discord `resources` directory — that
+// is, it contains Discord's app archive in *either* state:
+//   - `app.asar` — a pristine (or freshly updated) install, and
+//   - `betterdiscord.app.asar` — the original preserved after BetterDiscord
+//     injects its shadow `app/` folder (at which point `app.asar` no longer
+//     exists).
+//
+// Checking both is essential: once injected, an install would otherwise stop
+// resolving, so users could no longer repair or — critically — uninstall it.
+func hasDiscordApp(dir string) bool {
+	return utils.Exists(filepath.Join(dir, "app.asar")) || utils.Exists(filepath.Join(dir, "betterdiscord.app.asar"))
 }
 
 // latestAppDir returns the highest-versioned `app-{version}` child of base, or
@@ -65,38 +73,39 @@ func latestAppDir(base string) string {
 	return bestName
 }
 
-// resolveResources locates the `resources` directory holding app.asar from a
-// variety of proposed inputs, returning "" when none is found:
-//   - a resources dir itself (or macOS Contents/Resources) — app.asar is directly inside
+// resolveResources locates the Discord `resources` directory (holding Discord's
+// app archive — see hasDiscordApp) from a variety of proposed inputs, returning
+// "" when none is found:
+//   - a resources dir itself (or macOS Contents/Resources) — the archive is directly inside
 //   - an `app-{version}` dir — drills into its `resources`
-//   - a dir that directly contains `resources/app.asar` (flatpak files/{channel-})
+//   - a dir that directly contains a `resources` child (flatpak files/{channel-})
 //   - a base holding `app-{version}` dirs (Discord root / channel config dir) — picks latest
 func resolveResources(proposed string) string {
-	// The proposed path already holds app.asar (resources / macOS Contents/Resources).
-	if hasAppAsar(proposed) {
+	// The proposed path is already the resources dir (or macOS Contents/Resources).
+	if hasDiscordApp(proposed) {
 		return proposed
 	}
 
 	if strings.HasPrefix(filepath.Base(proposed), "app-") {
-		if res := filepath.Join(proposed, "resources"); hasAppAsar(res) {
+		if res := filepath.Join(proposed, "resources"); hasDiscordApp(res) {
 			return res
 		}
 		return ""
 	}
 
 	// A dir with a direct `resources` child (flatpak files/{channel-}).
-	if res := filepath.Join(proposed, "resources"); hasAppAsar(res) {
+	if res := filepath.Join(proposed, "resources"); hasDiscordApp(res) {
 		return res
 	}
 
 	// A macOS app bundle: app.asar lives in Contents/Resources.
-	if res := filepath.Join(proposed, "Contents", "Resources"); hasAppAsar(res) {
+	if res := filepath.Join(proposed, "Contents", "Resources"); hasDiscordApp(res) {
 		return res
 	}
 
 	// A base containing versioned app dirs (Windows Discord root, Linux channel dir).
 	if latest := latestAppDir(proposed); latest != "" {
-		if res := filepath.Join(proposed, latest, "resources"); hasAppAsar(res) {
+		if res := filepath.Join(proposed, latest, "resources"); hasDiscordApp(res) {
 			return res
 		}
 	}
