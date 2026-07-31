@@ -213,6 +213,24 @@ func TestValidateUnixStyleInstall_MacOSBundle(t *testing.T) {
 	}
 }
 
+func TestValidateUnixStyleInstall_SnapSegmentDetection(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// A real "/snap/" path segment is detected.
+	snapRes := filepath.Join(tmpDir, "snap", "discord", "current", "resources")
+	writeAppAsar(t, snapRes)
+	if got := validateUnixStyleInstall(snapRes, false, true); got == nil || !got.IsSnap {
+		t.Errorf("expected IsSnap true for a /snap/ path, got %+v", got)
+	}
+
+	// "snap" as a suffix of another segment must not false-positive.
+	fakeRes := filepath.Join(tmpDir, "mysnap", "discord", "resources")
+	writeAppAsar(t, fakeRes)
+	if got := validateUnixStyleInstall(fakeRes, false, true); got == nil || got.IsSnap {
+		t.Errorf("expected IsSnap false for a .../mysnap/... path, got %+v", got)
+	}
+}
+
 func TestReadBuildInfo(t *testing.T) {
 	t.Run("present", func(t *testing.T) {
 		dir := t.TempDir()

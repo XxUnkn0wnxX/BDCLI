@@ -168,7 +168,10 @@ func validateUnixStyleInstall(proposed string, detectFlatpak bool, detectSnap bo
 		install.IsFlatpak = strings.Contains(resources, "com.discordapp.")
 	}
 	if detectSnap {
-		install.IsSnap = strings.Contains(resources, "snap"+string(filepath.Separator))
+		// Match "snap" as a full path segment, not a substring, so paths like
+		// ".../mysnap/discord" don't false-positive.
+		sep := string(filepath.Separator)
+		install.IsSnap = strings.HasPrefix(resources, "snap"+sep) || strings.Contains(resources, sep+"snap"+sep)
 	}
 
 	return install

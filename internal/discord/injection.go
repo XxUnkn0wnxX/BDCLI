@@ -90,9 +90,9 @@ func (discord *DiscordInstall) inject(bd *betterdiscord.BDInstall) error {
 
 	// Roll back anything done after this point so a partial failure never leaves
 	// Discord without a loadable app. The restore is keyed on filesystem state,
-	// not on whether *this* call renamed: when re-injecting an already-injected
-	// install we remove app/ below, so we must still restore app.asar from the
-	// preserved copy to keep Discord launchable.
+	// not on whether *this* call renamed: rollback's own RemoveAll(appDir) clears
+	// app/ even when re-injecting an already-injected install, so we must still
+	// restore app.asar from the preserved copy to keep Discord launchable.
 	rollback := func() {
 		os.RemoveAll(appDir)
 		if !utils.Exists(originalAsar) && utils.Exists(preservedAsar) {
