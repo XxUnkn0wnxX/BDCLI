@@ -11,7 +11,7 @@ import (
 )
 
 type DiscordInstall struct {
-	ResourcesPath  string                `json:"corePath"`
+	ResourcesPath  string           `json:"resourcesPath"`
 	Channel   models.DiscordChannel `json:"channel"`
 	Version   string                `json:"version"`
 	IsFlatpak bool                  `json:"isFlatpak"`

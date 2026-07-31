@@ -42,8 +42,8 @@ var installCmd = &cobra.Command{
 			}
 		} else {
 			channel := models.ParseChannel(channelFlag)
-			corePath := discord.GetSuggestedPath(channel)
-			install = discord.ResolvePath(corePath)
+			resourcesPath := discord.GetSuggestedPath(channel)
+			install = discord.ResolvePath(resourcesPath)
 			if install == nil {
 				return fmt.Errorf("could not find a valid %s installation to install to", channelFlag)
 			}
