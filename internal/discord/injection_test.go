@@ -116,6 +116,44 @@ func TestInject_Idempotent(t *testing.T) {
 	}
 }
 
+// Anomalous pre-state: a live app.asar AND a leftover betterdiscord.app.asar +
+// app/ (e.g. Discord repaired/reinstalled over a prior injection). inject() must
+// treat the live app.asar as authoritative — discard the stale preserved copy,
+// preserve the live app, and rename app.asar away so our app/ shadow loads
+// (Electron would otherwise load the lingering app.asar and disable BD).
+func TestInject_LiveAsarWinsOverStalePreserved(t *testing.T) {
+	resources := t.TempDir()
+	live := []byte("LIVE current app.asar")
+	stale := []byte("stale old preserved app")
+	if err := os.WriteFile(filepath.Join(resources, "app.asar"), live, 0o644); err != nil {
+		t.Fatalf("seed live app.asar: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(resources, "betterdiscord.app.asar"), stale, 0o644); err != nil {
+		t.Fatalf("seed stale preserved: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(resources, "app"), 0o755); err != nil {
+		t.Fatalf("seed leftover app/: %v", err)
+	}
+
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
+	if err := install.inject(nil); err != nil {
+		t.Fatalf("inject: %v", err)
+	}
+
+	// app.asar must be renamed away so it can't shadow app/.
+	if utils.Exists(filepath.Join(resources, "app.asar")) {
+		t.Error("live app.asar should have been renamed away")
+	}
+	// The preserved copy must be the LIVE app, not the stale leftover.
+	got, _ := os.ReadFile(filepath.Join(resources, "betterdiscord.app.asar"))
+	if string(got) != string(live) {
+		t.Errorf("preserved asar = %q, expected the live app %q", got, live)
+	}
+	if !install.IsInjected() {
+		t.Error("expected IsInjected after re-injecting over a repaired install")
+	}
+}
+
 func TestUninject_RestoresExactly(t *testing.T) {
 	resources, original := newResourcesDir(t)
 	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}

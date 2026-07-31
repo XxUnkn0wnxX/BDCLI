@@ -50,17 +50,33 @@ func (discord *DiscordInstall) inject(bd *betterdiscord.BDInstall) error {
 	}
 
 	// Preserve the original app.asar (idempotent, guarded).
+	//
+	// A live app.asar is always Discord's current app and takes priority: it
+	// must be renamed away or it would shadow our app/ folder (Electron loads
+	// app.asar before app/), silently disabling BetterDiscord. If a preserved
+	// copy is also present — e.g. Discord repaired/reinstalled over a previous
+	// injection — that copy is stale, so we discard it and re-preserve the live
+	// app. Only when there is no live app.asar do we treat an existing preserved
+	// copy as the (already-injected) source of truth and leave it be.
 	renamed := false
 	switch {
-	case utils.Exists(preservedAsar):
-		// Already preserved from a prior injection; leave the archive alone.
 	case utils.Exists(originalAsar):
+		if utils.Exists(preservedAsar) {
+			if err := os.Remove(preservedAsar); err != nil {
+				output.Printf("❌ Unable to replace stale %s\n", preservedAsar)
+				output.Printf("   %s\n", err.Error())
+				return err
+			}
+		}
 		if err := os.Rename(originalAsar, preservedAsar); err != nil {
 			output.Printf("❌ Unable to preserve app.asar in %s\n", resources)
 			output.Printf("   %s\n", err.Error())
 			return err
 		}
 		renamed = true
+	case utils.Exists(preservedAsar):
+		// Already preserved from a prior injection and no live app.asar; the
+		// archive is correct — only the shadow app/ needs (re)writing below.
 	default:
 		return fmt.Errorf("no app.asar found in %s", resources)
 	}
