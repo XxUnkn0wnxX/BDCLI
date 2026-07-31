@@ -41,7 +41,15 @@ func (discord *DiscordInstall) InstallBD(options models.InstallOptions) error {
 	output.Println("✅ BetterDiscord downloaded")
 	output.Blank()
 
-	// Write injection script to discord_desktop_core/index.js
+	// Discord locks app.asar while running, so it must be stopped before we can
+	// modify it. Capture the executable so it can be relaunched afterward.
+	exe, wasRunning, err := discord.stop()
+	if err != nil {
+		return err
+	}
+	output.Blank()
+
+	// Shadow app.asar with our loader
 	output.Println("🔌 Injecting into Discord...")
 	if err := discord.inject(bd); err != nil {
 		return err
@@ -49,10 +57,10 @@ func (discord *DiscordInstall) InstallBD(options models.InstallOptions) error {
 	output.Println("✅ Injection successful")
 	output.Blank()
 
-	if options.RestartDiscord {
-		// Terminate and restart Discord if possible
+	// Only relaunch what we stopped: if Discord wasn't running we leave it closed.
+	if options.RestartDiscord && wasRunning {
 		output.Printf("🔄 Restarting %s...\n", discord.Channel.Name())
-		if err := discord.restart(); err != nil {
+		if err := discord.start(exe); err != nil {
 			return err
 		}
 		output.Blank()
@@ -63,12 +71,20 @@ func (discord *DiscordInstall) InstallBD(options models.InstallOptions) error {
 
 // UninstallBD removes BetterDiscord from this Discord installation
 func (discord *DiscordInstall) UninstallBD(options models.UninstallOptions) error {
+	// Discord locks app.asar while running; stop it before reverting the injection.
+	exe, wasRunning, err := discord.stop()
+	if err != nil {
+		return err
+	}
+	output.Blank()
+
 	output.Println("🧹 Removing injection...")
 	if err := discord.uninject(); err != nil {
 		return err
 	}
 	output.Blank()
 
+	// If full-uninstall is requested, remove the global BetterDiscord install
 	if options.FullUninstall {
 		install, err := discord.GetBetterDiscordInstall()
 		if err != nil {
@@ -80,9 +96,10 @@ func (discord *DiscordInstall) UninstallBD(options models.UninstallOptions) erro
 		output.Blank()
 	}
 
-	if options.RestartDiscord {
+	// Only relaunch what we stopped: if Discord wasn't running we leave it closed.
+	if options.RestartDiscord && wasRunning {
 		output.Printf("🔄 Restarting %s...\n", discord.Channel.Name())
-		if err := discord.restart(); err != nil {
+		if err := discord.start(exe); err != nil {
 			return err
 		}
 		output.Blank()
@@ -91,11 +108,22 @@ func (discord *DiscordInstall) UninstallBD(options models.UninstallOptions) erro
 	return nil
 }
 
-// RepairBD repairs BetterDiscord for this Discord installation
+// RepairBD repairs BetterDiscord for this Discord installation. It reverts the
+// injection and cleans the requested data files, leaving BetterDiscord
+// uninstalled; the caller then offers to reinstall.
 func (discord *DiscordInstall) RepairBD(options models.RepairOptions) error {
-	if err := discord.UninstallBD(models.UninstallOptions{FullUninstall: false, RestartDiscord: false}); err != nil {
+	// Discord locks app.asar while running; stop it before reverting the injection.
+	exe, wasRunning, err := discord.stop()
+	if err != nil {
 		return err
 	}
+	output.Blank()
+
+	output.Println("🧹 Removing injection...")
+	if err := discord.uninject(); err != nil {
+		return err
+	}
+	output.Blank()
 
 	bd, err := discord.GetBetterDiscordInstall()
 	if err != nil {
@@ -104,6 +132,18 @@ func (discord *DiscordInstall) RepairBD(options models.RepairOptions) error {
 
 	if err := bd.Repair(discord.Channel); err != nil {
 		return err
+	}
+	output.Blank()
+
+	// Repair leaves Discord uninjected. If it was running, relaunch it (vanilla)
+	// so the user isn't left with a closed client; if they then accept the
+	// reinstall prompt, that flow stops and re-injects it.
+	if wasRunning {
+		output.Printf("🔄 Restarting %s...\n", discord.Channel.Name())
+		if err := discord.start(exe); err != nil {
+			return err
+		}
+		output.Blank()
 	}
 
 	return nil

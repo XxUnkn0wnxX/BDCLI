@@ -9,20 +9,34 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 )
 
-func (discord *DiscordInstall) restart() error {
-	exeName := discord.getFullExe()
-
+// stop terminates Discord if it is running. The new injection method modifies
+// app.asar, which the running Discord process holds a lock on, so Discord must
+// be stopped before inject/uninject can touch it. It returns the executable path
+// of the killed process (captured before the kill, for a later start) and whether
+// Discord was running. Flatpak/Snap relaunch via their own run commands and don't
+// use the exe.
+func (discord *DiscordInstall) stop() (exe string, wasRunning bool, err error) {
 	if running, _ := discord.isRunning(); !running {
-		output.Printf("✅ %s is not running; skipping restart.\n", discord.Channel.Name())
-		return nil
+		output.Printf("✅ %s is not running.\n", discord.Channel.Name())
+		return "", false, nil
 	}
+
+	// Capture the executable before killing — afterward the process is gone.
+	exe = discord.getFullExe()
 
 	if err := discord.kill(); err != nil {
-		output.Printf("❌ Unable to restart %s, please do so manually.\n", discord.Channel.Name())
+		output.Printf("❌ Unable to stop %s. Please close it and try again.\n", discord.Channel.Name())
 		output.Printf("   %s\n", err.Error())
-		return err
+		return exe, true, err
 	}
 
+	output.Printf("✅ Stopped %s\n", discord.Channel.Name())
+	return exe, true, nil
+}
+
+// start launches Discord. exe is the executable path captured by stop() and is
+// used for native installs; Flatpak/Snap launch via their run commands.
+func (discord *DiscordInstall) start(exe string) error {
 	// Determine command based on installation type
 	var cmd *exec.Cmd
 	if discord.IsFlatpak {
@@ -30,12 +44,12 @@ func (discord *DiscordInstall) restart() error {
 	} else if discord.IsSnap {
 		cmd = exec.Command("snap", "run", discord.Channel.Exe())
 	} else {
-		// Use binary found in killing process for non-Flatpak/Snap installs
-		if exeName == "" {
+		// Use binary found while killing the process for non-Flatpak/Snap installs
+		if exe == "" {
 			output.Printf("❌ Unable to restart %s, please do so manually.\n", discord.Channel.Name())
 			return fmt.Errorf("could not determine executable path for %s", discord.Channel.Name())
 		}
-		cmd = exec.Command(exeName)
+		cmd = exec.Command(exe)
 	}
 
 	// Set working directory to user home
