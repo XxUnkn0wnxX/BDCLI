@@ -18,14 +18,20 @@ var appIndexScript string
 var appPackageJSON string
 
 // probeWritable verifies dir accepts writes before we perform any destructive
-// operation, by creating and removing a throwaway file. This is the elevation
-// trigger: a failure here means we abort before touching the bundle.
+// operation, by creating and removing a unique throwaway file. This is the
+// elevation trigger: a failure here means we abort before touching the bundle.
+// A unique name (os.CreateTemp) avoids colliding with or clobbering an existing
+// file and is safe under concurrent probes.
 func probeWritable(dir string) error {
-	probe := filepath.Join(dir, ".bd-write-probe")
-	if err := os.WriteFile(probe, []byte{}, 0o644); err != nil {
+	f, err := os.CreateTemp(dir, ".bd-write-probe-*")
+	if err != nil {
 		return err
 	}
-	return os.Remove(probe)
+	// Writability is already proven by the successful create; cleanup is
+	// best-effort and must not turn a writable dir into a probe failure.
+	_ = f.Close()
+	_ = os.Remove(f.Name())
+	return nil
 }
 
 // inject shadows Discord's app.asar: it preserves the original as
@@ -86,7 +92,12 @@ func (discord *DiscordInstall) inject(bd *betterdiscord.BDInstall) error {
 	rollback := func() {
 		os.RemoveAll(appDir)
 		if renamed && !utils.Exists(originalAsar) {
-			os.Rename(preservedAsar, originalAsar)
+			if err := os.Rename(preservedAsar, originalAsar); err != nil {
+				// If this fails, Discord is left with no app.asar and no app/ —
+				// surface it so the user can restore manually.
+				output.Printf("❌ Rollback failed: unable to restore app.asar in %s\n", resources)
+				output.Printf("   %s\n", err.Error())
+			}
 		}
 	}
 
@@ -140,11 +151,22 @@ func (discord *DiscordInstall) uninject() error {
 
 	// Only restore when a preserved copy exists and we wouldn't clobber a live
 	// app.asar (crash-recovery / partial-state safety).
-	if utils.Exists(preservedAsar) && !utils.Exists(originalAsar) {
+	switch {
+	case utils.Exists(preservedAsar) && !utils.Exists(originalAsar):
+		// Normal revert: restore Discord's original app from the preserved copy.
 		if err := os.Rename(preservedAsar, originalAsar); err != nil {
 			output.Printf("❌ Unable to restore app.asar in %s\n", resources)
 			output.Printf("   %s\n", err.Error())
 			return err
+		}
+	case utils.Exists(preservedAsar):
+		// A live app.asar is already present (e.g. Discord repaired/reinstalled
+		// over the injection), so the preserved copy is stale. Remove it to fully
+		// revert and reclaim the space (100MB+). A failure here only leaves a
+		// harmless leftover — Discord still launches — so don't fail the uninstall.
+		if err := os.Remove(preservedAsar); err != nil {
+			output.Printf("⚠️  Unable to remove stale %s\n", preservedAsar)
+			output.Printf("   %s\n", err.Error())
 		}
 	}
 

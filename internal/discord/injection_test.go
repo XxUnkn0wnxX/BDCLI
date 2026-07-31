@@ -183,6 +183,41 @@ func TestUninject_RestoresExactly(t *testing.T) {
 	}
 }
 
+// If Discord repaired/reinstalled over an injection, uninject encounters a live
+// app.asar alongside a now-stale betterdiscord.app.asar. It must remove the
+// stale copy (reclaiming 100MB+) and leave the live app untouched.
+func TestUninject_RemovesStalePreservedWhenLiveAsarPresent(t *testing.T) {
+	resources := t.TempDir()
+	if err := os.WriteFile(filepath.Join(resources, "app.asar"), []byte("live"), 0o644); err != nil {
+		t.Fatalf("seed live app.asar: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(resources, "betterdiscord.app.asar"), []byte("stale"), 0o644); err != nil {
+		t.Fatalf("seed stale preserved: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(resources, "app"), 0o755); err != nil {
+		t.Fatalf("seed app/: %v", err)
+	}
+
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
+	if err := install.uninject(); err != nil {
+		t.Fatalf("uninject: %v", err)
+	}
+
+	if utils.Exists(filepath.Join(resources, "betterdiscord.app.asar")) {
+		t.Error("stale preserved copy should be removed when a live app.asar exists")
+	}
+	got, _ := os.ReadFile(filepath.Join(resources, "app.asar"))
+	if string(got) != "live" {
+		t.Errorf("app.asar = %q, expected the untouched live app", got)
+	}
+	if utils.Exists(filepath.Join(resources, "app")) {
+		t.Error("shadow app/ should be removed")
+	}
+	if install.IsInjected() {
+		t.Error("should not report injected after uninject")
+	}
+}
+
 func TestUninject_NotInjectedIsNoop(t *testing.T) {
 	resources, original := newResourcesDir(t)
 	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
