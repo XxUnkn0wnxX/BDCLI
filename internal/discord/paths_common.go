@@ -81,6 +81,10 @@ func latestAppDir(base string) string {
 //   - a dir that directly contains a `resources` child (flatpak files/{channel-})
 //   - a base holding `app-{version}` dirs (Discord root / channel config dir) — picks latest
 func resolveResources(proposed string) string {
+	if proposed == "" {
+		return ""
+	}
+
 	// The proposed path is already the resources dir (or macOS Contents/Resources).
 	if hasDiscordApp(proposed) {
 		return proposed

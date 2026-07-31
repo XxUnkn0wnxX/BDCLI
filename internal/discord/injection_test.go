@@ -245,6 +245,53 @@ func TestInject_NoAppAsarErrors(t *testing.T) {
 	}
 }
 
+func TestInject_EmptyResourcesPathErrors(t *testing.T) {
+	install := &DiscordInstall{ResourcesPath: "", Channel: models.Stable}
+	if err := install.inject(nil); err == nil {
+		t.Fatal("expected an error for an empty resources path (must not touch the cwd)")
+	}
+}
+
+func TestUninject_EmptyResourcesPathErrors(t *testing.T) {
+	install := &DiscordInstall{ResourcesPath: "", Channel: models.Stable}
+	if err := install.uninject(); err == nil {
+		t.Fatal("expected an error for an empty resources path (must not RemoveAll the cwd)")
+	}
+}
+
+// Rolling back a failed *re-injection* of an already-injected install must still
+// leave Discord launchable: the preserve step is a no-op (no live app.asar), but
+// rollback removes app/, so it must restore app.asar from the preserved copy.
+func TestInject_RollbackRestoresLaunchableOnReinject(t *testing.T) {
+	resources := t.TempDir()
+	preserved := []byte("preserved discord app")
+	if err := os.WriteFile(filepath.Join(resources, "betterdiscord.app.asar"), preserved, 0o644); err != nil {
+		t.Fatalf("seed preserved: %v", err)
+	}
+	// Already-injected: app/ exists. Make index.js a directory so the index.js
+	// write fails *after* the (no-op) preserve step, forcing rollback.
+	if err := os.MkdirAll(filepath.Join(resources, "app", "index.js"), 0o755); err != nil {
+		t.Fatalf("seed app/index.js dir: %v", err)
+	}
+
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
+	if err := install.inject(nil); err == nil {
+		t.Fatal("expected inject to fail when app/index.js can't be written")
+	}
+
+	// Discord must remain launchable: app.asar restored from the preserved copy.
+	restored, err := os.ReadFile(filepath.Join(resources, "app.asar"))
+	if err != nil {
+		t.Fatalf("app.asar not restored after rollback: %v", err)
+	}
+	if string(restored) != string(preserved) {
+		t.Errorf("restored app.asar = %q, expected %q", restored, preserved)
+	}
+	if utils.Exists(filepath.Join(resources, "app")) {
+		t.Error("shadow app/ should be removed by rollback")
+	}
+}
+
 func TestInject_ProbeFailAbortsBeforeRename(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("chmod-based write denial is unreliable on Windows")

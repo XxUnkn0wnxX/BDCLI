@@ -43,6 +43,9 @@ func probeWritable(dir string) error {
 // injection script resolves the BetterDiscord folder at runtime.
 func (discord *DiscordInstall) inject(bd *betterdiscord.BDInstall) error {
 	resources := discord.ResourcesPath
+	if resources == "" {
+		return fmt.Errorf("cannot inject: resources path is empty")
+	}
 	originalAsar := filepath.Join(resources, "app.asar")
 	preservedAsar := filepath.Join(resources, "betterdiscord.app.asar")
 	appDir := filepath.Join(resources, "app")
@@ -64,7 +67,6 @@ func (discord *DiscordInstall) inject(bd *betterdiscord.BDInstall) error {
 	// injection — that copy is stale, so we discard it and re-preserve the live
 	// app. Only when there is no live app.asar do we treat an existing preserved
 	// copy as the (already-injected) source of truth and leave it be.
-	renamed := false
 	switch {
 	case utils.Exists(originalAsar):
 		if utils.Exists(preservedAsar) {
@@ -79,7 +81,6 @@ func (discord *DiscordInstall) inject(bd *betterdiscord.BDInstall) error {
 			output.Printf("   %s\n", err.Error())
 			return err
 		}
-		renamed = true
 	case utils.Exists(preservedAsar):
 		// Already preserved from a prior injection and no live app.asar; the
 		// archive is correct — only the shadow app/ needs (re)writing below.
@@ -87,14 +88,15 @@ func (discord *DiscordInstall) inject(bd *betterdiscord.BDInstall) error {
 		return fmt.Errorf("no app.asar found in %s", resources)
 	}
 
-	// Roll back anything done after the rename so a partial failure never
-	// leaves Discord without a loadable app.
+	// Roll back anything done after this point so a partial failure never leaves
+	// Discord without a loadable app. The restore is keyed on filesystem state,
+	// not on whether *this* call renamed: when re-injecting an already-injected
+	// install we remove app/ below, so we must still restore app.asar from the
+	// preserved copy to keep Discord launchable.
 	rollback := func() {
 		os.RemoveAll(appDir)
-		if renamed && !utils.Exists(originalAsar) {
+		if !utils.Exists(originalAsar) && utils.Exists(preservedAsar) {
 			if err := os.Rename(preservedAsar, originalAsar); err != nil {
-				// If this fails, Discord is left with no app.asar and no app/ —
-				// surface it so the user can restore manually.
 				output.Printf("❌ Rollback failed: unable to restore app.asar in %s\n", resources)
 				output.Printf("   %s\n", err.Error())
 			}
@@ -137,6 +139,9 @@ func (discord *DiscordInstall) inject(bd *betterdiscord.BDInstall) error {
 // Discord's original app.asar from the preserved copy.
 func (discord *DiscordInstall) uninject() error {
 	resources := discord.ResourcesPath
+	if resources == "" {
+		return fmt.Errorf("cannot uninject: resources path is empty")
+	}
 	originalAsar := filepath.Join(resources, "app.asar")
 	preservedAsar := filepath.Join(resources, "betterdiscord.app.asar")
 	appDir := filepath.Join(resources, "app")
@@ -178,6 +183,8 @@ func (discord *DiscordInstall) uninject() error {
 // place: both our `app/index.js` entry and the preserved original must exist.
 func (discord *DiscordInstall) IsInjected() bool {
 	resources := discord.ResourcesPath
-	return utils.Exists(filepath.Join(resources, "app", "index.js")) &&
-		utils.Exists(filepath.Join(resources, "betterdiscord.app.asar"))
+	if resources == "" {
+		return false
+	}
+	return utils.Exists(filepath.Join(resources, "app", "index.js")) && utils.Exists(filepath.Join(resources, "betterdiscord.app.asar"))
 }
