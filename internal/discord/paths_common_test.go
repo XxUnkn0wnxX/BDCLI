@@ -213,21 +213,47 @@ func TestValidateUnixStyleInstall_MacOSBundle(t *testing.T) {
 	}
 }
 
-func TestValidateUnixStyleInstall_SnapSegmentDetection(t *testing.T) {
-	tmpDir := t.TempDir()
+func TestIsSnapPath(t *testing.T) {
+	sep := string(filepath.Separator)
+	tests := []struct {
+		name string
+		path string
+		want bool
+	}{
+		{"snap mount", sep + filepath.Join("snap", "discord", "current", "resources"), true},
+		{"snapd mount", sep + filepath.Join("var", "lib", "snapd", "snap", "discord", "resources"), true},
+		{"user named snap", sep + filepath.Join("home", "snap", ".config", "discord", "resources"), false},
+		{"mysnap segment", sep + filepath.Join("home", "u", "mysnap", "discord", "resources"), false},
+		{"native config", sep + filepath.Join("home", "u", ".config", "discord", "app-1.0.1", "resources"), false},
+	}
+	for _, tt := range tests {
+		if got := isSnapPath(tt.path); got != tt.want {
+			t.Errorf("%s: isSnapPath(%q) = %v, want %v", tt.name, tt.path, got, tt.want)
+		}
+	}
+}
 
-	// A real "/snap/" path segment is detected.
-	snapRes := filepath.Join(tmpDir, "snap", "discord", "current", "resources")
-	writeAppAsar(t, snapRes)
-	if got := validateUnixStyleInstall(snapRes, false, true); got == nil || !got.IsSnap {
-		t.Errorf("expected IsSnap true for a /snap/ path, got %+v", got)
+// An interrupted Discord update can leave a higher-versioned app-* dir with a
+// broken/empty resources folder next to a valid older one. Resolution must fall
+// back to the valid older version rather than failing outright.
+func TestValidateWindowsStyleInstall_SkipsBrokenLatestVersion(t *testing.T) {
+	tmpDir := t.TempDir()
+	root := filepath.Join(tmpDir, "Discord")
+
+	valid := filepath.Join(root, "app-1.0.9002", "resources")
+	writeAppAsar(t, valid)
+
+	// Newer version dir exists but its resources has no app.asar (broken update).
+	if err := os.MkdirAll(filepath.Join(root, "app-1.0.10000", "resources"), 0755); err != nil {
+		t.Fatalf("create broken version dir: %v", err)
 	}
 
-	// "snap" as a suffix of another segment must not false-positive.
-	fakeRes := filepath.Join(tmpDir, "mysnap", "discord", "resources")
-	writeAppAsar(t, fakeRes)
-	if got := validateUnixStyleInstall(fakeRes, false, true); got == nil || got.IsSnap {
-		t.Errorf("expected IsSnap false for a .../mysnap/... path, got %+v", got)
+	result := validateWindowsStyleInstall(root)
+	if result == nil {
+		t.Fatal("expected resolution to fall back to the valid older version")
+	}
+	if result.ResourcesPath != valid {
+		t.Errorf("ResourcesPath = %s, expected valid older %s", result.ResourcesPath, valid)
 	}
 }
 

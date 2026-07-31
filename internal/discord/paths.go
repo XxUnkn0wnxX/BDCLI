@@ -38,10 +38,13 @@ func GetVersion(proposed string) string {
 
 func GetChannel(proposed string) models.DiscordChannel {
 	for folder := range strings.SplitSeq(proposed, string(filepath.Separator)) {
-		// Normalize the segment so macOS bundle names ("Discord Canary.app")
-		// match the space-stripped channel names ("discordcanary").
-		normalized := strings.ReplaceAll(strings.ToLower(folder), " ", "")
+		// Normalize the segment so macOS bundle names ("Discord Canary.app") and
+		// flatpak channel dirs ("discord-canary") both match the channel names
+		// ("discordcanary").
+		normalized := strings.ToLower(folder)
 		normalized = strings.TrimSuffix(normalized, ".app")
+		normalized = strings.ReplaceAll(normalized, " ", "")
+		normalized = strings.ReplaceAll(normalized, "-", "")
 		for _, channel := range models.Channels {
 			if normalized == strings.ReplaceAll(strings.ToLower(channel.Name()), " ", "") {
 				return channel

@@ -47,8 +47,11 @@ func hasDiscordApp(dir string) bool {
 	return utils.Exists(filepath.Join(dir, "app.asar")) || utils.Exists(filepath.Join(dir, "betterdiscord.app.asar"))
 }
 
-// latestAppDir returns the highest-versioned `app-{version}` child of base, or
-// "" when none exist. Sorting is numeric so 1.0.10000 beats 1.0.9999.
+// latestAppDir returns the highest-versioned `app-{version}` child of base whose
+// resources dir actually holds a Discord app, or "" when none qualify. Skipping
+// broken/incomplete version dirs (e.g. from an interrupted Discord update) lets
+// resolution fall back to a slightly older but valid install instead of failing.
+// Sorting is numeric so 1.0.10000 beats 1.0.9999.
 func latestAppDir(base string) string {
 	entries, err := os.ReadDir(base)
 	if err != nil {
@@ -65,12 +68,26 @@ func latestAppDir(base string) string {
 		if !versionRegex.MatchString(version) {
 			continue
 		}
+		if !hasDiscordApp(filepath.Join(base, entry.Name(), "resources")) {
+			continue
+		}
 		if bestName == "" || utils.CompareVersions(version, bestVersion) > 0 {
 			bestName, bestVersion = entry.Name(), version
 		}
 	}
 
 	return bestName
+}
+
+// isSnapPath reports whether a resolved resources path lives under a Snap mount
+// (/snap/… or /var/lib/snapd/snap/…). Anchoring to the mount points avoids
+// false-positives on unrelated paths that merely contain a "snap" segment — e.g.
+// the home directory of a user named "snap" (/home/snap/…).
+func isSnapPath(path string) bool {
+	sep := string(filepath.Separator)
+	return strings.HasPrefix(path, "snap"+sep) ||
+		strings.HasPrefix(path, sep+"snap"+sep) ||
+		strings.HasPrefix(path, sep+"var"+sep+"lib"+sep+"snapd"+sep+"snap"+sep)
 }
 
 // resolveResources locates the Discord `resources` directory (holding Discord's
@@ -168,10 +185,7 @@ func validateUnixStyleInstall(proposed string, detectFlatpak bool, detectSnap bo
 		install.IsFlatpak = strings.Contains(resources, "com.discordapp.")
 	}
 	if detectSnap {
-		// Match "snap" as a full path segment, not a substring, so paths like
-		// ".../mysnap/discord" don't false-positive.
-		sep := string(filepath.Separator)
-		install.IsSnap = strings.HasPrefix(resources, "snap"+sep) || strings.Contains(resources, sep+"snap"+sep)
+		install.IsSnap = isSnapPath(resources)
 	}
 
 	return install
