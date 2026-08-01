@@ -4,10 +4,17 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/betterdiscord/cli/internal/output"
 	"github.com/shirou/gopsutil/v3/process"
 )
+
+// killWaitTimeout bounds how long kill() waits for Discord's processes to fully
+// exit after being signaled. Discord runs several processes; killing only
+// signals termination, so we wait for them to actually die (releasing their lock
+// on app.asar) before the caller touches it.
+const killWaitTimeout = 10 * time.Second
 
 // stop terminates Discord if it is running. The new injection method modifies
 // app.asar, which the running Discord process holds a lock on, so Discord must
@@ -111,6 +118,7 @@ func (discord *DiscordInstall) kill() error {
 	}
 
 	// Search for desired process(es)
+	signaled := false
 	for _, p := range processes {
 		n, err := p.Name()
 
@@ -130,8 +138,29 @@ func (discord *DiscordInstall) kill() error {
 		}
 	}
 
-	// If we got here, everything was killed without error
-	return nil
+		if !signaled {
+		return nil
+	}
+
+	// Kill() only signals termination; wait for the processes to actually exit so
+	// their lock on app.asar is released before the caller modifies it.
+	return discord.waitForExit(killWaitTimeout)
+}
+
+// waitForExit blocks until no process matching the channel's executable remains,
+// or the timeout elapses. A transient enumeration error is treated as
+// "not yet confirmed exited" and retried rather than failing outright.
+func (discord *DiscordInstall) waitForExit(timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	for {
+		if running, err := discord.isRunning(); err == nil && !running {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("%s did not exit within %s", discord.Channel.Name(), timeout)
+		}
+		time.Sleep(150 * time.Millisecond)
+	}
 }
 
 func (discord *DiscordInstall) getFullExe() string {
