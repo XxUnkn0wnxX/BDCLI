@@ -20,6 +20,12 @@ type DiscordInstall struct {
 
 // InstallBD installs BetterDiscord into this Discord installation
 func (discord *DiscordInstall) InstallBD(options models.InstallOptions) error {
+	// Reject Snap before doing anything (notably before stop()) so an unsupported
+	// install never needlessly kills a running Discord only to fail at inject().
+	if err := discord.errIfSnap(); err != nil {
+		return err
+	}
+
 	bd, err := discord.GetBetterDiscordInstall()
 	if err != nil {
 		return err
@@ -71,6 +77,11 @@ func (discord *DiscordInstall) InstallBD(options models.InstallOptions) error {
 
 // UninstallBD removes BetterDiscord from this Discord installation
 func (discord *DiscordInstall) UninstallBD(options models.UninstallOptions) error {
+	// Reject Snap before stop() so an unsupported install isn't needlessly killed.
+	if err := discord.errIfSnap(); err != nil {
+		return err
+	}
+
 	// Discord locks app.asar while running; stop it before reverting the injection.
 	exe, wasRunning, err := discord.stop()
 	if err != nil {
@@ -112,6 +123,11 @@ func (discord *DiscordInstall) UninstallBD(options models.UninstallOptions) erro
 // injection and cleans the requested data files, leaving BetterDiscord
 // uninstalled; the caller then offers to reinstall.
 func (discord *DiscordInstall) RepairBD(options models.RepairOptions) error {
+	// Reject Snap before stop() so an unsupported install isn't needlessly killed.
+	if err := discord.errIfSnap(); err != nil {
+		return err
+	}
+
 	// Discord locks app.asar while running; stop it before reverting the injection.
 	exe, wasRunning, err := discord.stop()
 	if err != nil {
