@@ -16,7 +16,16 @@ import (
 // Discord was running. Flatpak/Snap relaunch via their own run commands and don't
 // use the exe.
 func (discord *DiscordInstall) stop() (exe string, wasRunning bool, err error) {
-	if running, _ := discord.isRunning(); !running {
+	// If we can't even determine whether Discord is running, don't gamble on
+	// touching app.asar — it may be locked. Fail with an actionable message
+	// rather than letting inject/uninject surface a confusing file error.
+	running, err := discord.isRunning()
+	if err != nil {
+		output.Printf("❌ Unable to determine whether %s is running. Please close it and try again.\n", discord.Channel.Name())
+		output.Printf("   %s\n", err.Error())
+		return "", false, err
+	}
+	if !running {
 		output.Printf("✅ %s is not running.\n", discord.Channel.Name())
 		return "", false, nil
 	}

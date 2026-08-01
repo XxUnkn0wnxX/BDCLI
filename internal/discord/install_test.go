@@ -9,9 +9,9 @@ import (
 	"github.com/betterdiscord/cli/internal/models"
 )
 
-// UninstallBD with neither full-uninstall nor restart should only revert the
-// app.asar shadow — the safe path that never touches the global BD folder or
-// the running Discord process.
+// UninstallBD with neither full-uninstall nor restart reverts the app.asar
+// shadow without removing the global BD folder or relaunching Discord. (Discord
+// isn't running in the test, so the stop() step is a no-op.)
 func TestUninstallBD_UninjectOnly(t *testing.T) {
 	resources := t.TempDir()
 	// Seed an injected state: preserved asar + shadow app/ entry.

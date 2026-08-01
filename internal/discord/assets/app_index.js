@@ -14,8 +14,10 @@ try {
 
     // If we're on Linux there are a couple cases to deal with
     if (process.platform !== "win32" && process.platform !== "darwin") {
-        // Use || instead of ?? because a falsey value of "" is invalid per XDG spec
-        userConfig = process.env.XDG_CONFIG_HOME || path.join(process.env.HOME, ".config");
+        // Use || instead of ?? because a falsey value of "" is invalid per XDG spec.
+        // os.homedir() resolves the home directory even if the HOME env var is unset.
+        const homeDir = process.env.HOME || require("os").homedir();
+        userConfig = process.env.XDG_CONFIG_HOME || path.join(homeDir, ".config");
     }
     require(path.join(userConfig, "BetterDiscord", "data", "betterdiscord.asar"));
 }
