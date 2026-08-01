@@ -84,9 +84,11 @@ func (discord *DiscordInstall) isRunning() (bool, error) {
 	name := discord.Channel.Exe()
 	processes, err := process.Processes()
 
-	// If we can't even list processes, bail out
+	// If we can't even list processes, bail out. Wrap the underlying error so
+	// callers (e.g. waitForExit) can surface the real cause instead of a bare
+	// "could not list processes".
 	if err != nil {
-		return false, fmt.Errorf("could not list processes")
+		return false, fmt.Errorf("could not list processes: %w", err)
 	}
 
 	// Search for desired process(es)
@@ -151,14 +153,32 @@ func (discord *DiscordInstall) kill() error {
 
 // waitForExit blocks until no process matching the channel's executable remains,
 // or the timeout elapses. A transient enumeration error is treated as
-// "not yet confirmed exited" and retried rather than failing outright.
+// "not yet confirmed exited" and retried rather than failing outright. If the
+// most recent check couldn't enumerate processes at all, the timeout surfaces
+// that underlying error instead of a misleading "did not exit" — otherwise a
+// persistent enumeration failure would send users chasing a lock that may not
+// exist.
 func (discord *DiscordInstall) waitForExit(timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
+	var lastErr error
 	for {
-		if running, err := discord.isRunning(); err == nil && !running {
+		running, err := discord.isRunning()
+		switch {
+		case err != nil:
+			// Couldn't confirm state this round; remember why in case we time out
+			// with the failure still unresolved.
+			lastErr = err
+		case !running:
 			return nil
+		default:
+			// Clean read that still shows Discord running: the process, not
+			// enumeration, is the holdup — clear any stale earlier error.
+			lastErr = nil
 		}
 		if time.Now().After(deadline) {
+			if lastErr != nil {
+				return fmt.Errorf("could not confirm %s exited within %s: %w", discord.Channel.Name(), timeout, lastErr)
+			}
 			return fmt.Errorf("%s did not exit within %s", discord.Channel.Name(), timeout)
 		}
 		time.Sleep(150 * time.Millisecond)
