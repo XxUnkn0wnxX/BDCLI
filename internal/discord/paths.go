@@ -37,11 +37,17 @@ func GetVersion(proposed string) string {
 }
 
 func GetChannel(proposed string) models.DiscordChannel {
-	for folder := range strings.SplitSeq(proposed, string(filepath.Separator)) {
+	// Iterate from the leaf toward the root: the channel identifier always sits
+	// closest to the leaf (e.g. `.../discordcanary/app-x/resources`), so scanning
+	// backwards avoids false matches on a parent segment that happens to contain a
+	// channel name (e.g. a home dir at `/home/discord`).
+	segments := strings.Split(proposed, string(filepath.Separator))
+
+	for i := len(segments) - 1; i >= 0; i-- {
 		// Normalize the segment so macOS bundle names ("Discord Canary.app") and
 		// flatpak channel dirs ("discord-canary") both match the channel names
 		// ("discordcanary").
-		normalized := strings.ToLower(folder)
+		normalized := strings.ToLower(segments[i])
 		normalized = strings.TrimSuffix(normalized, ".app")
 		normalized = strings.ReplaceAll(normalized, " ", "")
 		normalized = strings.ReplaceAll(normalized, "-", "")

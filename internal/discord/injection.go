@@ -46,6 +46,14 @@ func (discord *DiscordInstall) inject(bd *betterdiscord.BDInstall) error {
 	if resources == "" {
 		return fmt.Errorf("cannot inject: resources path is empty")
 	}
+	// Snap installs live on a read-only squashfs mount that can't host the shadow.
+	// Short-circuit with an actionable message instead of surfacing the generic
+	// permission error the writability probe would raise below.
+	if discord.IsSnap {
+		output.Printf("❌ Snap installs are not supported\n")
+		output.Printf("   The read-only Snap mount cannot host the BetterDiscord injection.\n")
+		return fmt.Errorf("snap installs are not supported")
+	}
 	originalAsar := filepath.Join(resources, "app.asar")
 	preservedAsar := filepath.Join(resources, "betterdiscord.app.asar")
 	appDir := filepath.Join(resources, "app")
@@ -142,6 +150,13 @@ func (discord *DiscordInstall) uninject() error {
 	resources := discord.ResourcesPath
 	if resources == "" {
 		return fmt.Errorf("cannot uninject: resources path is empty")
+	}
+	// Snap installs are never injectable (read-only mount), so there is nothing to
+	// revert; report it explicitly rather than attempting filesystem mutations.
+	if discord.IsSnap {
+		output.Printf("❌ Snap installs are not supported\n")
+		output.Printf("   The read-only Snap mount cannot host the BetterDiscord injection.\n")
+		return fmt.Errorf("snap installs are not supported")
 	}
 	originalAsar := filepath.Join(resources, "app.asar")
 	preservedAsar := filepath.Join(resources, "betterdiscord.app.asar")

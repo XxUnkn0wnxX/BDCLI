@@ -9,25 +9,34 @@ import (
 	"github.com/betterdiscord/cli/internal/wsl"
 )
 
+// Snap is intentionally omitted: its read-only squashfs mount can't host
+// the app.asar shadow, so the new injection method does not support it.
 func init() {
-	config, _ := os.UserConfigDir()
-	home, _ := os.UserHomeDir()
+	config, errConfig := os.UserConfigDir()
+	home, errHome := os.UserHomeDir()
+
+	// Flatpak (global). The app.asar lives in the read-only deployment files.
+	// Example: `/var/lib/flatpak/app/com.discordapp.DiscordCanary/current/active/files/discord-canary/resources/app.asar`.
+	// This has no home/config dependency, so it's always searched.
 	paths := []string{
-		// Native. The new updater lays out versioned app dirs under `~/.config`.
-		// Example: `~/.config/discordcanary`.
-		// Resources: `~/.config/discordcanary/app-0.0.90/resources/app.asar`.
-		filepath.Join(config, "{channel}"),
-
-		// Flatpak (global). The app.asar lives in the read-only deployment files.
-		// Example: `/var/lib/flatpak/app/com.discordapp.DiscordCanary/current/active/files/discord-canary/resources/app.asar`.
 		filepath.Join("/var", "lib", "flatpak", "app", "com.discordapp.{CHANNEL}", "current", "active", "files", "{channel-}", "resources"),
+	}
 
-		// Flatpak (user). Same layout under the per-user flatpak tree (writable).
-		// Example: `~/.local/share/flatpak/app/com.discordapp.DiscordCanary/current/active/files/discord-canary/resources/app.asar`.
-		filepath.Join(home, ".local", "share", "flatpak", "app", "com.discordapp.{CHANNEL}", "current", "active", "files", "{channel-}", "resources"),
+	// Only search config/home-relative locations when those dirs resolved;
+	// otherwise the joins would produce relative paths anchored at the current
+	// working directory.
 
-		// Snap is intentionally omitted: its read-only squashfs mount can't host
-		// the app.asar shadow, so the new injection method does not support it.
+	// Native. The new updater lays out versioned app dirs under `~/.config`.
+	// Example: `~/.config/discordcanary`.
+	// Resources: `~/.config/discordcanary/app-0.0.90/resources/app.asar`.
+	if errConfig == nil && config != "" {
+		paths = append(paths, filepath.Join(config, "{channel}"))
+	}
+
+	// Flatpak (user). Same layout under the per-user flatpak tree (writable).
+	// Example: `~/.local/share/flatpak/app/com.discordapp.DiscordCanary/current/active/files/discord-canary/resources/app.asar`.
+	if errHome == nil && home != "" {
+		paths = append(paths, filepath.Join(home, ".local", "share", "flatpak", "app", "com.discordapp.{CHANNEL}", "current", "active", "files", "{channel-}", "resources"))
 	}
 
 	if wsl.IsWSL() {

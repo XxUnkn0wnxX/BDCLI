@@ -8,14 +8,19 @@ import (
 )
 
 func init() {
-	home, _ := os.UserHomeDir()
+	home, err := os.UserHomeDir()
 
 	// On macOS the app.asar lives inside the application bundle
 	// (Discord.app/Contents/Resources), not under Application Support. Search the
 	// standard install locations for each channel's bundle.
 	bases := []string{
 		filepath.Join("/", "Applications"),
-		filepath.Join(home, "Applications"),
+	}
+
+	// Only add ~/Applications when the home dir resolved; otherwise the join would
+	// produce a relative "Applications" and search the current working directory.
+	if err == nil && home != "" {
+		bases = append(bases, filepath.Join(home, "Applications"))
 	}
 
 	for _, channel := range models.Channels {
