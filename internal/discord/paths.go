@@ -28,7 +28,7 @@ func GetAllInstalls() map[models.DiscordChannel][]*DiscordInstall {
 }
 
 func GetVersion(proposed string) string {
-	for folder := range strings.SplitSeq(proposed, string(filepath.Separator)) {
+	for _, folder := range strings.Split(filepath.ToSlash(proposed), "/") {
 		if version := versionRegex.FindString(folder); version != "" {
 			return version
 		}
@@ -41,7 +41,10 @@ func GetChannel(proposed string) models.DiscordChannel {
 	// closest to the leaf (e.g. `.../discordcanary/app-x/resources`), so scanning
 	// backwards avoids false matches on a parent segment that happens to contain a
 	// channel name (e.g. a home dir at `/home/discord`).
-	segments := strings.Split(proposed, string(filepath.Separator))
+	// Normalize to forward slashes before splitting so a Windows path that mixes
+	// separators (backslashes and forward slashes, which the OS treats
+	// interchangeably) still segments cleanly.
+	segments := strings.Split(filepath.ToSlash(proposed), "/")
 
 	for i := len(segments) - 1; i >= 0; i-- {
 		// Normalize the segment so macOS bundle names ("Discord Canary.app") and

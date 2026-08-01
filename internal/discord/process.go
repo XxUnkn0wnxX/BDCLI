@@ -112,9 +112,11 @@ func (discord *DiscordInstall) kill() error {
 	name := discord.Channel.Exe()
 	processes, err := process.Processes()
 
-	// If we can't even list processes, bail out
+	// If we can't even list processes, bail out. Preserve the underlying error so
+	// a genuine enumeration failure is distinguishable from Discord still running
+	// (the caller's wait-for-exit surfaces the latter separately).
 	if err != nil {
-		return fmt.Errorf("could not list processes")
+		return fmt.Errorf("could not list processes: %w", err)
 	}
 
 	// Search for desired process(es)

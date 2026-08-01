@@ -177,16 +177,18 @@ func (discord *DiscordInstall) uninject() error {
 	preservedAsar := filepath.Join(resources, "betterdiscord.app.asar")
 	appDir := filepath.Join(resources, "app")
 
-	if utils.Exists(appDir) {
-		if err := os.RemoveAll(appDir); err != nil {
-			output.Printf("❌ Unable to remove %s\n", appDir)
-			output.Printf("   %s\n", err.Error())
-			return err
-		}
+	// A clean install (only app.asar; no shadow app/ and no preserved copy) was
+	// never injected — report a no-op instead of claiming a removal that didn't
+	// happen, which would mislead anyone troubleshooting uninstall/repair.
+	if !utils.Exists(appDir) && !utils.Exists(preservedAsar) {
+		output.Printf("ℹ️  No injection found in %s\n", discord.Channel.Name())
+		return nil
 	}
 
-	// Only restore when a preserved copy exists and we wouldn't clobber a live
-	// app.asar (crash-recovery / partial-state safety).
+	// Restore Discord's original app.asar *before* removing the shadow app/. If the
+	// restore fails (e.g. a running Discord still locks the file), the injection is
+	// left fully intact and loadable rather than bricked with neither app.asar nor
+	// app/ present.
 	switch {
 	case utils.Exists(preservedAsar) && !utils.Exists(originalAsar):
 		// Normal revert: restore Discord's original app from the preserved copy.
@@ -204,6 +206,17 @@ func (discord *DiscordInstall) uninject() error {
 		if err := os.Remove(preservedAsar); err != nil {
 			output.Printf("⚠️  Unable to remove stale %s\n", preservedAsar)
 			output.Printf("   %s\n", err.Error())
+		}
+	}
+
+	// Original app restored (or the preserved copy was stale); now clear the shadow
+	// app/. A failure here is non-bricking — Electron prefers the restored app.asar
+	// over app/ — but still surface it so the leftover can be cleaned up.
+	if utils.Exists(appDir) {
+		if err := os.RemoveAll(appDir); err != nil {
+			output.Printf("❌ Unable to remove %s\n", appDir)
+			output.Printf("   %s\n", err.Error())
+			return err
 		}
 	}
 
