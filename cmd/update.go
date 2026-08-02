@@ -62,7 +62,7 @@ var updateCmd = &cobra.Command{
 
 		// Download the latest version
 		output.Println("📥 Downloading update...")
-		if err := bdinstall.Download(); err != nil {
+		if err := bdinstall.Download(useDevBuild); err != nil {
 			return fmt.Errorf("failed to download update: %w", err)
 		}
 

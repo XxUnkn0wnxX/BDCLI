@@ -41,7 +41,7 @@ func (discord *DiscordInstall) InstallBD(options models.InstallOptions) error {
 
 	// Download and write betterdiscord.asar
 	output.Println("📥 Downloading BetterDiscord...")
-	if err := bd.Download(); err != nil {
+	if err := bd.Download(options.UseDevBuild); err != nil {
 		return err
 	}
 	output.Println("✅ BetterDiscord downloaded")
