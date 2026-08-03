@@ -139,6 +139,7 @@ func (discord *DiscordInstall) kill() error {
 			if killErr != nil {
 				return killErr
 			}
+			signaled = true
 		}
 	}
 
