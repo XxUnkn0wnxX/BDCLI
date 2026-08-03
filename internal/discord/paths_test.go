@@ -289,8 +289,8 @@ func TestResolvePath(t *testing.T) {
 	// Add a test install with new path format
 	testInstall := &DiscordInstall{
 		ResourcesPath: "/home/user/.config/discord/app-1.0.0/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
-		Channel:  models.Stable,
-		Version:  "1.0.0",
+		Channel:       models.Stable,
+		Version:       "1.0.0",
 	}
 	allDiscordInstalls[models.Stable] = []*DiscordInstall{testInstall}
 

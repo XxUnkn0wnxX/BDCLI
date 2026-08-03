@@ -142,7 +142,7 @@ func (discord *DiscordInstall) kill() error {
 		}
 	}
 
-		if !signaled {
+	if !signaled {
 		return nil
 	}
 

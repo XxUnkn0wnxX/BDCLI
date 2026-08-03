@@ -11,11 +11,11 @@ import (
 )
 
 type DiscordInstall struct {
-	ResourcesPath  string           `json:"resourcesPath"`
-	Channel   models.DiscordChannel `json:"channel"`
-	Version   string                `json:"version"`
-	IsFlatpak bool                  `json:"isFlatpak"`
-	IsSnap    bool                  `json:"isSnap"`
+	ResourcesPath string                `json:"resourcesPath"`
+	Channel       models.DiscordChannel `json:"channel"`
+	Version       string                `json:"version"`
+	IsFlatpak     bool                  `json:"isFlatpak"`
+	IsSnap        bool                  `json:"isSnap"`
 }
 
 // InstallBD installs BetterDiscord into this Discord installation
