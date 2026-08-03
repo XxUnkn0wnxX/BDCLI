@@ -93,9 +93,12 @@ func (i *BDInstall) downloadFromGitHubRelease(apiURL, sourceLabel string) error 
 		return err
 	}
 
-	if version == "" {
+	switch version {
+	case "":
 		output.Printf("✅ Downloaded BetterDiscord from %s\n", sourceLabel)
-	} else {
+	case "canary":
+		output.Printf("✅ Downloaded BetterDiscord development build from %s\n", sourceLabel)
+	default:
 		output.Printf("✅ Downloaded BetterDiscord version %s from %s\n", output.FormatVersion(version), sourceLabel)
 	}
 	i.hasDownloaded = true

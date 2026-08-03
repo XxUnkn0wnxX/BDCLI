@@ -46,11 +46,11 @@ func GetChannel(proposed string) models.DiscordChannel {
 	// interchangeably) still segments cleanly.
 	segments := strings.Split(filepath.ToSlash(proposed), "/")
 
-	for i := len(segments) - 1; i >= 0; i-- {
+	for _, segment := range slices.Backward(segments) {
 		// Normalize the segment so macOS bundle names ("Discord Canary.app") and
 		// flatpak channel dirs ("discord-canary") both match the channel names
 		// ("discordcanary").
-		normalized := strings.ToLower(segments[i])
+		normalized := strings.ToLower(segment)
 		normalized = strings.TrimSuffix(normalized, ".app")
 		normalized = strings.ReplaceAll(normalized, " ", "")
 		normalized = strings.ReplaceAll(normalized, "-", "")

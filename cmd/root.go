@@ -45,11 +45,9 @@ func IsDebugBuild() bool {
 }
 
 var silent bool
-var useDevBuild bool
 
 func init() {
 	rootCmd.PersistentFlags().BoolVar(&silent, "silent", false, "Suppress non-error output")
-	rootCmd.PersistentFlags().BoolVar(&useDevBuild, "dev", useDevBuild, "Use the development build of BetterDiscord")
 }
 
 var rootCmd = &cobra.Command{
@@ -60,11 +58,6 @@ var rootCmd = &cobra.Command{
 		if silent || isSilentEnvEnabled() {
 			output.SetWriters(io.Discard, nil)
 		}
-
-		if useDevBuild || isDevBuildEnvEnabled() {
-			useDevBuild = true
-			output.Println("⚠️  Using development build of BetterDiscord")
-		}
 	},
 	RunE: func(cmd *cobra.Command, args []string) error { return cmd.Help() },
 }
@@ -72,11 +65,6 @@ var rootCmd = &cobra.Command{
 func isSilentEnvEnabled() bool {
 	value := strings.TrimSpace(strings.ToLower(os.Getenv("BDCLI_SILENT")))
 	return value != "" && value != "0" && value != "false" && value != "no"
-}
-
-func isDevBuildEnvEnabled() bool {
-	value := strings.TrimSpace(strings.ToLower(os.Getenv("BDCLI_DEV_BUILD")))
-	return value == "1" || value == "true" || value == "yes"
 }
 
 func Execute() {
