@@ -22,6 +22,17 @@ func withURLs(t *testing.T, website, github string) {
 	})
 }
 
+// withCanaryURL temporarily overrides the canary (development build) endpoint for
+// a test and restores it on cleanup.
+func withCanaryURL(t *testing.T, canary string) {
+	t.Helper()
+	orig := githubCanaryReleaseURL
+	githubCanaryReleaseURL = canary
+	t.Cleanup(func() {
+		githubCanaryReleaseURL = orig
+	})
+}
+
 func newBDInstallWithDataDir(t *testing.T) *BDInstall {
 	t.Helper()
 	install := New(filepath.Join(t.TempDir(), "BetterDiscord"))
@@ -59,7 +70,7 @@ func TestDownload_FromWebsite(t *testing.T) {
 	withURLs(t, website.URL, github.URL)
 
 	install := newBDInstallWithDataDir(t)
-	if err := install.download(); err != nil {
+	if err := install.download(false); err != nil {
 		t.Fatalf("download() failed: %v", err)
 	}
 	if !install.HasDownloaded() {
@@ -89,7 +100,7 @@ func TestDownload_FallsBackToGitHub(t *testing.T) {
 	withURLs(t, website.URL, github.URL)
 
 	install := newBDInstallWithDataDir(t)
-	if err := install.download(); err != nil {
+	if err := install.download(false); err != nil {
 		t.Fatalf("download() failed: %v", err)
 	}
 	if !install.HasDownloaded() {
@@ -112,8 +123,78 @@ func TestDownload_GitHubMissingAsset(t *testing.T) {
 	withURLs(t, website.URL, github.URL)
 
 	install := newBDInstallWithDataDir(t)
-	if err := install.download(); err == nil {
+	if err := install.download(false); err == nil {
 		t.Fatal("expected an error when the betterdiscord.asar asset is missing")
+	}
+}
+
+func TestDownload_DevBuildUsesCanaryAndSkipsWebsite(t *testing.T) {
+	const body = "asar-from-canary"
+	asset := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, body)
+	}))
+	defer asset.Close()
+
+	// Neither the website nor the "latest" endpoint should be touched for a dev build.
+	website := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("website should not be called for the development build")
+		http.Error(w, "unexpected", http.StatusInternalServerError)
+	}))
+	defer website.Close()
+
+	github := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("the GitHub latest endpoint should not be called for the development build")
+		http.Error(w, "unexpected", http.StatusInternalServerError)
+	}))
+	defer github.Close()
+
+	canary := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `{"tag_name":"canary","assets":[{"name":"betterdiscord.asar","url":%q}]}`, asset.URL)
+	}))
+	defer canary.Close()
+
+	withURLs(t, website.URL, github.URL)
+	withCanaryURL(t, canary.URL)
+
+	install := newBDInstallWithDataDir(t)
+	if err := install.download(true); err != nil {
+		t.Fatalf("download(true) failed: %v", err)
+	}
+	if !install.HasDownloaded() {
+		t.Error("expected HasDownloaded() to be true after canary download")
+	}
+	assertFileContents(t, install.Asar(), body)
+}
+
+func TestDownload_DevBuildHardFailsWithoutStableFallback(t *testing.T) {
+	// The canary release is unreachable. The dev build must fail rather than
+	// silently falling back to the website or the stable GitHub release.
+	website := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("website should not be called as a fallback for the development build")
+		http.Error(w, "unexpected", http.StatusInternalServerError)
+	}))
+	defer website.Close()
+
+	github := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("the GitHub latest endpoint should not be called as a fallback for the development build")
+		http.Error(w, "unexpected", http.StatusInternalServerError)
+	}))
+	defer github.Close()
+
+	canary := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "down", http.StatusInternalServerError)
+	}))
+	defer canary.Close()
+
+	withURLs(t, website.URL, github.URL)
+	withCanaryURL(t, canary.URL)
+
+	install := newBDInstallWithDataDir(t)
+	if err := install.download(true); err == nil {
+		t.Fatal("expected an error when the canary release is unreachable")
+	}
+	if install.HasDownloaded() {
+		t.Error("expected HasDownloaded() to remain false after a failed dev build download")
 	}
 }
 
@@ -125,7 +206,7 @@ func TestDownload_SkipsWhenAlreadyDownloaded(t *testing.T) {
 	// never touched when the asar is already downloaded.
 	withURLs(t, "http://127.0.0.1:0", "http://127.0.0.1:0")
 
-	if err := install.download(); err != nil {
+	if err := install.download(false); err != nil {
 		t.Fatalf("download() should be a no-op when already downloaded: %v", err)
 	}
 }

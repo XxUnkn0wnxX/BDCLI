@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/betterdiscord/cli/internal/models"
+	"github.com/betterdiscord/cli/internal/utils"
 )
 
 var searchPaths []string
@@ -28,7 +29,7 @@ func GetAllInstalls() map[models.DiscordChannel][]*DiscordInstall {
 }
 
 func GetVersion(proposed string) string {
-	for _, folder := range strings.Split(filepath.ToSlash(proposed), "/") {
+	for folder := range strings.SplitSeq(filepath.ToSlash(proposed), "/") {
 		if version := versionRegex.FindString(folder); version != "" {
 			return version
 		}
@@ -46,11 +47,11 @@ func GetChannel(proposed string) models.DiscordChannel {
 	// interchangeably) still segments cleanly.
 	segments := strings.Split(filepath.ToSlash(proposed), "/")
 
-	for i := len(segments) - 1; i >= 0; i-- {
+	for _, segment := range slices.Backward(segments) {
 		// Normalize the segment so macOS bundle names ("Discord Canary.app") and
 		// flatpak channel dirs ("discord-canary") both match the channel names
 		// ("discordcanary").
-		normalized := strings.ToLower(segments[i])
+		normalized := strings.ToLower(segment)
 		normalized = strings.TrimSuffix(normalized, ".app")
 		normalized = strings.ReplaceAll(normalized, " ", "")
 		normalized = strings.ReplaceAll(normalized, "-", "")
@@ -104,13 +105,9 @@ func ResolvePath(proposed string) *DiscordInstall {
 func sortInstalls() {
 	for channel := range allDiscordInstalls {
 		slices.SortFunc(allDiscordInstalls[channel], func(a, b *DiscordInstall) int {
-			switch {
-			case a.Version > b.Version:
-				return -1
-			case b.Version > a.Version:
-				return 1
-			}
-			return 0
+			// Descending (highest version first) with a numeric compare so
+			// e.g. 1.0.10000 sorts above 1.0.9999.
+			return utils.CompareVersions(b.Version, a.Version)
 		})
 	}
 }

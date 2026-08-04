@@ -16,6 +16,11 @@ func init() {
 	rootCmd.AddCommand(updateCmd)
 }
 
+// This currently only checks for updates to the BetterDiscord loader (betterdiscord.asar).
+// In the future, we may also want to check for updates to the CLI itself.
+// This also only checks for updates to the stable release as the check is cheap (tag name)
+// the canary version is a rolling release and is not versioned, so it is not as easily
+// possible to check for updates to it.
 var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update BetterDiscord to the latest version",
@@ -62,7 +67,7 @@ var updateCmd = &cobra.Command{
 
 		// Download the latest version
 		output.Println("📥 Downloading update...")
-		if err := bdinstall.Download(); err != nil {
+		if err := bdinstall.Download(false); err != nil {
 			return fmt.Errorf("failed to download update: %w", err)
 		}
 

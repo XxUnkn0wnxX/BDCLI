@@ -142,9 +142,9 @@ func TestGetChannel(t *testing.T) {
 			expected: models.Stable,
 		},
 		{
-			name:     "Multiple Discord mentions (first wins)",
+			name:     "Multiple Discord mentions (nearest wins)",
 			path:     filepath.Join("discordcanary", "discord", "modules"),
-			expected: models.Canary,
+			expected: models.Stable, // The nearest segment is "discord", which maps to Stable
 		},
 		{
 			name:     "Empty path defaults to Stable",
@@ -184,7 +184,7 @@ func TestGetChannel(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := GetChannel(tt.path)
 			if result != tt.expected {
-				t.Errorf("GetChannel(%s) = %v (%s), expected %v (%s)",
+				t.Errorf("GetChannel(%q) = %v (%s), expected %v (%s)",
 					tt.path, result, result.String(), tt.expected, tt.expected.String())
 			}
 		})
@@ -289,8 +289,8 @@ func TestResolvePath(t *testing.T) {
 	// Add a test install with new path format
 	testInstall := &DiscordInstall{
 		ResourcesPath: "/home/user/.config/discord/app-1.0.0/modules/discord_desktop_core-1/discord_desktop_core/core.asar",
-		Channel:  models.Stable,
-		Version:  "1.0.0",
+		Channel:       models.Stable,
+		Version:       "1.0.0",
 	}
 	allDiscordInstalls[models.Stable] = []*DiscordInstall{testInstall}
 

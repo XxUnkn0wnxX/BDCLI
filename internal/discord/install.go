@@ -11,11 +11,11 @@ import (
 )
 
 type DiscordInstall struct {
-	ResourcesPath  string           `json:"resourcesPath"`
-	Channel   models.DiscordChannel `json:"channel"`
-	Version   string                `json:"version"`
-	IsFlatpak bool                  `json:"isFlatpak"`
-	IsSnap    bool                  `json:"isSnap"`
+	ResourcesPath string                `json:"resourcesPath"`
+	Channel       models.DiscordChannel `json:"channel"`
+	Version       string                `json:"version"`
+	IsFlatpak     bool                  `json:"isFlatpak"`
+	IsSnap        bool                  `json:"isSnap"`
 }
 
 // InstallBD installs BetterDiscord into this Discord installation
@@ -41,7 +41,7 @@ func (discord *DiscordInstall) InstallBD(options models.InstallOptions) error {
 
 	// Download and write betterdiscord.asar
 	output.Println("📥 Downloading BetterDiscord...")
-	if err := bd.Download(); err != nil {
+	if err := bd.Download(options.UseDevBuild); err != nil {
 		return err
 	}
 	output.Println("✅ BetterDiscord downloaded")
