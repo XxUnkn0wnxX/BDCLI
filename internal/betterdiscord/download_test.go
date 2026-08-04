@@ -57,7 +57,7 @@ func TestDownload_FromWebsite(t *testing.T) {
 	const body = "asar-from-website"
 	website := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("x-bd-version", "1.2.3")
-		fmt.Fprint(w, body)
+		fmt.Fprint(w, body) //nolint this is a test file
 	}))
 	defer website.Close()
 
@@ -82,7 +82,7 @@ func TestDownload_FromWebsite(t *testing.T) {
 func TestDownload_FallsBackToGitHub(t *testing.T) {
 	const body = "asar-from-github"
 	asset := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, body)
+		fmt.Fprint(w, body) //nolint this is a test file
 	}))
 	defer asset.Close()
 
@@ -116,7 +116,7 @@ func TestDownload_GitHubMissingAsset(t *testing.T) {
 	defer website.Close()
 
 	github := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `{"tag_name":"v9.9.9","assets":[{"name":"something-else.zip","url":"http://example.invalid"}]}`)
+		fmt.Fprint(w, `{"tag_name":"v9.9.9","assets":[{"name":"something-else.zip","url":"http://example.invalid"}]}`) //nolint this is a test file
 	}))
 	defer github.Close()
 
@@ -131,7 +131,7 @@ func TestDownload_GitHubMissingAsset(t *testing.T) {
 func TestDownload_DevBuildUsesCanaryAndSkipsWebsite(t *testing.T) {
 	const body = "asar-from-canary"
 	asset := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, body)
+		fmt.Fprint(w, body) //nolint this is a test file
 	}))
 	defer asset.Close()
 
