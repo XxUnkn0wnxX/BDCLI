@@ -40,6 +40,8 @@ This repository contains the source code for the BetterDiscord CLI. It is a nati
 
 - Easy installation and uninstallation of BetterDiscord
 - Support for multiple Discord channels (Stable, PTB, Canary)
+- Automatically stops and restarts Discord during install/uninstall
+- Optional BetterDiscord development builds via `--dev`
 - Discover Discord installs and suggested paths
 - Manage plugins and themes (list, install, update, remove)
 - Browse and search the BetterDiscord store
@@ -162,6 +164,10 @@ bdcli uninstall --path /path/to/Discord
 bdcli uninstall --all
 bdcli uninstall --full
 
+# Install the BetterDiscord development build (install-only; update tracks stable)
+bdcli install --dev
+BDCLI_DEV_BUILD=1 bdcli install
+
 # Check-only updates
 bdcli update --check
 bdcli plugins update <name|id> --check
@@ -189,25 +195,25 @@ BDCLI_SILENT=1 bdcli update
 A cross-platform CLI for installing, updating, and managing BetterDiscord.
 
 Usage:
-   bdcli [flags]
-   bdcli [command]
+  bdcli [flags]
+  bdcli [command]
 
 Available Commands:
-   completion  Generate shell completions
-   discover    Discover Discord installations and related data
-   help        Help about any command
-   info        Displays information about BetterDiscord installation
-   install     Installs BetterDiscord to your Discord
-   plugins     Manage BetterDiscord plugins
-   store       Browse and search the BetterDiscord store
-   themes      Manage BetterDiscord themes
-   uninstall   Uninstalls BetterDiscord from your Discord
-   update      Update BetterDiscord to the latest version
-   version     Print the version number
+  completion  Generate shell completions
+  discover    Discover Discord installations and related data
+  help        Help about any command
+  info        Displays information about BetterDiscord installation
+  install     Installs BetterDiscord to your Discord
+  plugins     Manage BetterDiscord plugins
+  store       Browse and search the BetterDiscord store
+  themes      Manage BetterDiscord themes
+  uninstall   Uninstalls BetterDiscord from your Discord
+  update      Update BetterDiscord to the latest version
+  version     Print the version number
 
 Flags:
-       --silent   Suppress non-error output
-   -h, --help     help for bdcli
+  -h, --help     help for bdcli
+      --silent   Suppress non-error output
 
 Use "bdcli [command] --help" for more information about a command.
 ```
@@ -222,7 +228,21 @@ Yes. Flatpak Discord installs are supported.
 
 ### Why is Snap Discord unsupported on Linux?
 
-Discord Snap packaging/runtime changes prevent the CLI from supporting Snap installs.
+Upstream Snap packaging changes mount Discord in a read-only filesystem, so the CLI cannot write the BetterDiscord injection into it. Native and Flatpak installs remain supported, and the CLI detects Snap installs and rejects them with a clear error instead of leaving a half-modified install.
+
+### Do I need to close Discord before installing or uninstalling?
+
+No. The CLI stops Discord automatically before modifying it and restarts it afterward if it was running. The exception is `bdcli update`, which only replaces the BetterDiscord asar, you need to restart Discord manually for the update to take effect.
+
+### How do I install the BetterDiscord development build?
+
+Use the `--dev` flag (or set `BDCLI_DEV_BUILD=1`):
+
+```bash
+bdcli install --dev
+```
+
+The development build is BetterDiscord's rolling `canary` pre-release on GitHub (unrelated to the Discord Canary channel). It is not versioned, so `bdcli update` always tracks the stable release. Rerun `bdcli install --dev` to get the newest development build.
 
 ### How can I use the global BetterDiscord folder with Flatpak?
 
@@ -329,7 +349,9 @@ Release outline:
 │   ├── betterdiscord/  # BetterDiscord installation logic
 │   ├── discord/        # Discord path resolution and injection
 │   ├── models/         # Data models
-│   └── utils/          # Utility functions
+│   ├── output/         # Output formatting
+│   ├── utils/          # Utility functions
+│   └── wsl/            # WSL detection and path mapping
 ├── main.go             # Entry point
 ├── Taskfile.yml        # Task automation
 └── .goreleaser.yaml    # Release configuration
