@@ -74,7 +74,7 @@ Releases are **tag-driven via GoReleaser**, all from a single Ubuntu runner (unl
 ## 6. Documentation & collaborator expectations
 
 - `README.md` is the user-facing reference (command table, compatibility matrix, FAQ). If you add/rename a command or flag, update the README command reference and help-output snippet in the same PR.
-- `CONTRIBUTING.md` covers commit style (present-tense imperative, 72-char subject) and the Go styleguide summary. If it conflicts with these notes or with actual code, escalate via an issue rather than silently picking one.
+- `CONTRIBUTING.md` covers commit style (present-tense imperative, 72-char subject), the Go styleguide summary, and the AI-assisted-contributions policy (see also §10). If it conflicts with these notes or with actual code, escalate via an issue rather than silently picking one.
 - Keep AGENTS focused on machine-readable operating guidance; long-form docs belong in the README.
 
 ## 7. Cursor / Copilot / assistant config
