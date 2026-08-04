@@ -79,16 +79,16 @@ var installCmd = &cobra.Command{
 			}
 			return "native"
 		}())
-		output.Printf("   Core Path:       %s\n", path.Dir(install.ResourcesPath))
+		output.Printf("   Resources Path:  %s\n", path.Dir(install.ResourcesPath))
 		output.Blank()
 
 		bdinstall, err := install.GetBetterDiscordInstall()
 		if err != nil {
-			output.Printf("failed to get BetterDiscord install info: %s", err.Error())
+			output.Printf("failed to get BetterDiscord install info: %s\n", err.Error())
 			return nil
 		}
 		if bdinstall == nil {
-			output.Printf("BetterDiscord install info is nil")
+			output.Printf("BetterDiscord install info is nil\n")
 			return nil
 		}
 		bdinstall.LogBuildinfo()
