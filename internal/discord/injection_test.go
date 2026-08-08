@@ -233,6 +233,28 @@ func TestUninject_NotInjectedIsNoop(t *testing.T) {
 	}
 }
 
+// Corrupted pre-state: only the shadow app/ remains — both app.asar and the
+// preserved copy are gone (external interference; discovery normally filters
+// this state out). uninject must refuse rather than delete app/ and report
+// success on an install with nothing left for Electron to load.
+func TestUninject_RefusesWhenNoAsarPresent(t *testing.T) {
+	resources := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(resources, "app"), 0o755); err != nil {
+		t.Fatalf("seed app/: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(resources, "app", "index.js"), []byte("x"), 0o644); err != nil {
+		t.Fatalf("seed index.js: %v", err)
+	}
+
+	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
+	if err := install.uninject(); err == nil {
+		t.Fatal("expected an error when both app.asar and betterdiscord.app.asar are missing")
+	}
+	if !utils.Exists(filepath.Join(resources, "app", "index.js")) {
+		t.Error("app/ must be left untouched when refusing to uninject")
+	}
+}
+
 func TestInject_NoAppAsarErrors(t *testing.T) {
 	resources := t.TempDir() // empty, no app.asar
 	install := &DiscordInstall{ResourcesPath: resources, Channel: models.Stable}
