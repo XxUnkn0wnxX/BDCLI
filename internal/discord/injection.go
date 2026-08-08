@@ -213,9 +213,20 @@ func (discord *DiscordInstall) uninject() error {
 		}
 	}
 
-	// Original app restored (or the preserved copy was stale); now clear the shadow
-	// app/. A failure here is non-bricking — Electron prefers the restored app.asar
-	// over app/ — but still surface it so the leftover can be cleaned up.
+	// With both asars gone (a corrupted state discovery normally filters out),
+	// there is nothing to restore. The shadow app/ can't boot either (its entry
+	// point requires the missing preserved asar) but deleting it would erase the
+	// evidence and report success on an unlaunchable install. Refuse so the user
+	// learns Discord itself needs a reinstall.
+	if !utils.Exists(originalAsar) && !utils.Exists(preservedAsar) {
+		output.Printf("❌ Unable to uninject %s: missing both app.asar and betterdiscord.app.asar\n", discord.Channel.Name())
+		output.Printf("   Your %s install appears corrupted! Reinstall Discord, then run this command again.\n", discord.Channel.Name())
+		return fmt.Errorf("cannot uninject: missing both app.asar and betterdiscord.app.asar in %s", resources)
+	}
+
+	// An app.asar is in place (restored above, or already live); now clear the
+	// shadow app/. A failure here is non-bricking since Electron prefers app.asar
+	// over app/, but still surface it so the leftover can be cleaned up.
 	if utils.Exists(appDir) {
 		if err := os.RemoveAll(appDir); err != nil {
 			output.Printf("❌ Unable to remove %s\n", appDir)
