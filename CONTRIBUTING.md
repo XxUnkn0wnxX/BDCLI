@@ -17,6 +17,8 @@ The following is a set of guidelines for contributing to BetterDiscord CLI. Thes
   * [Your First Code Contribution](#your-first-code-contribution)
   * [Pull Requests](#pull-requests)
 
+[AI-assisted contributions](#ai-assisted-contributions)
+
 [Styleguides](#styleguides)
   * [Git Commit Messages](#git-commit-messages)
   * [Go Styleguide](#go-styleguide)
@@ -44,7 +46,7 @@ The repository is organized into:
 │   ├── output/            // Output formatting
 │   ├── utils/             // Shared utilities
 │   └── wsl/               // WSL support
-├── completions/           // Shell completion scripts (bash, fish, zsh)
+├── completions/           // Generated shell completions (bash, fish, zsh; gitignored)
 ├── main.go                // CLI entry point
 ├── go.mod / go.sum        // Dependency management
 └── README.md              // Project documentation
@@ -68,9 +70,11 @@ Common commands:
 
 The project uses [Taskfile](https://taskfile.dev/) for common tasks:
 
-* `task build` - compile binaries for all platforms.
-* `task test` - run tests and coverage.
-* `task install` - install the CLI locally (from source).
+* `task run -- <args>` - run the CLI locally with dev version info.
+* `task build` - build a binary for your current platform into `dist/`.
+* `task build:all` - build binaries for all platforms (requires GoReleaser).
+* `task test` - run all tests (use `task coverage` for coverage).
+* `task check` - format, vet, lint, and test in one shot.
 
 See `Taskfile.yml` for the full list of available tasks.
 
@@ -116,6 +120,15 @@ Please follow these steps to have your contribution considered by the maintainer
 
 While the prerequisites above must be satisfied prior to having your pull request reviewed, the reviewer(s) may ask you to complete additional design work, tests, or other changes before your pull request can be ultimately accepted.
 
+## AI-assisted contributions
+
+AI tools are fine to use. Submitting output with little or no personal review is not.
+
+- **Review the diff yourself.** If you can't explain why each changed line is correct, the PR isn't ready.
+- **Run the required checks locally.** Don't rely on CI to catch problems you could catch before pushing.
+- **Disclose AI involvement in your PR description.** If an AI wrote a meaningful portion of the code, say so and briefly describe what you reviewed. This isn't meant as a penalty, it's useful context for the reviewer.
+- **If you used an autonomous agent with minimal personal review of the output, say that explicitly.** PRs that appear to be unreviewed agent output and don't disclose this will be closed without detailed feedback.
+
 ## Styleguides
 
 ### Git Commit Messages
@@ -129,11 +142,12 @@ While the prerequisites above must be satisfied prior to having your pull reques
 ### Go Styleguide
 
 * Run `gofmt` on any Go files you touch.
-* Keep standard library imports first, then a blank line, then external deps, then local packages.
+* Keep standard library imports first, then a blank line, then all remaining imports (external and internal packages share one alphabetized block).
 * Prefer early returns for error handling.
+* Route all user-facing output through `internal/output` (never `fmt.Print*` to stdout directly) so `--silent` and output-capturing tests keep working.
 * Use clear, descriptive names for functions and variables.
 * Add comments to exported functions and types.
-* Write tests for new functionality (see existing `*_test.go` files for patterns).
+* Write tests for new functionality (see existing `*_test.go` files for patterns). Tests must not hit the real network, point package-level endpoint vars at `httptest` servers instead.
 
 ## Additional Notes
 

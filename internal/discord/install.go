@@ -1,23 +1,35 @@
 package discord
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/betterdiscord/cli/internal/betterdiscord"
 	"github.com/betterdiscord/cli/internal/models"
 	"github.com/betterdiscord/cli/internal/output"
-	"github.com/betterdiscord/cli/internal/utils"
 )
 
 type DiscordInstall struct {
-	CorePath  string                `json:"corePath"`
-	Channel   models.DiscordChannel `json:"channel"`
-	Version   string                `json:"version"`
-	IsFlatpak bool                  `json:"isFlatpak"`
-	IsSnap    bool                  `json:"isSnap"`
+	ResourcesPath string                `json:"resourcesPath"`
+	Channel       models.DiscordChannel `json:"channel"`
+	Version       string                `json:"version"`
+	IsFlatpak     bool                  `json:"isFlatpak"`
+	IsSnap        bool                  `json:"isSnap"`
 }
 
 // InstallBD installs BetterDiscord into this Discord installation
-func (discord *DiscordInstall) InstallBD() error {
-	bd := discord.GetBetterDiscordInstall()
+func (discord *DiscordInstall) InstallBD(options models.InstallOptions) error {
+	// Reject Snap before doing anything (notably before stop()) so an unsupported
+	// install never needlessly kills a running Discord only to fail at inject().
+	if err := discord.errIfSnap(); err != nil {
+		return err
+	}
+
+	bd, err := discord.GetBetterDiscordInstall()
+	if err != nil {
+		return err
+	}
 
 	// Make BetterDiscord folders
 	output.Println("🛠 Preparing BetterDiscord...")
@@ -29,13 +41,21 @@ func (discord *DiscordInstall) InstallBD() error {
 
 	// Download and write betterdiscord.asar
 	output.Println("📥 Downloading BetterDiscord...")
-	if err := bd.Download(); err != nil {
+	if err := bd.Download(options.UseDevBuild); err != nil {
 		return err
 	}
 	output.Println("✅ BetterDiscord downloaded")
 	output.Blank()
 
-	// Write injection script to discord_desktop_core/index.js
+	// Discord locks app.asar while running, so it must be stopped before we can
+	// modify it. Capture the executable so it can be relaunched afterward.
+	exe, wasRunning, err := discord.stop()
+	if err != nil {
+		return err
+	}
+	output.Blank()
+
+	// Shadow app.asar with our loader
 	output.Println("🔌 Injecting into Discord...")
 	if err := discord.inject(bd); err != nil {
 		return err
@@ -43,80 +63,126 @@ func (discord *DiscordInstall) InstallBD() error {
 	output.Println("✅ Injection successful")
 	output.Blank()
 
-	// Terminate and restart Discord if possible
-	output.Printf("🔄 Restarting %s...\n", discord.Channel.Name())
-	if err := discord.restart(); err != nil {
-		return err
+	// Only relaunch what we stopped: if Discord wasn't running we leave it closed.
+	if options.RestartDiscord && wasRunning {
+		output.Printf("🔄 Restarting %s...\n", discord.Channel.Name())
+		if err := discord.start(exe); err != nil {
+			return err
+		}
+		output.Blank()
 	}
-	output.Blank()
 
 	return nil
 }
 
 // UninstallBD removes BetterDiscord from this Discord installation
-func (discord *DiscordInstall) UninstallBD() error {
+func (discord *DiscordInstall) UninstallBD(options models.UninstallOptions) error {
+	// Reject Snap before stop() so an unsupported install isn't needlessly killed.
+	if err := discord.errIfSnap(); err != nil {
+		return err
+	}
+
+	// Discord locks app.asar while running; stop it before reverting the injection.
+	exe, wasRunning, err := discord.stop()
+	if err != nil {
+		return err
+	}
+	output.Blank()
+
 	output.Println("🧹 Removing injection...")
 	if err := discord.uninject(); err != nil {
 		return err
 	}
 	output.Blank()
 
-	output.Printf("🔄 Restarting %s...\n", discord.Channel.Name())
-	if err := discord.restart(); err != nil {
-		return err
+	// If full-uninstall is requested, remove the global BetterDiscord install
+	if options.FullUninstall {
+		install, err := discord.GetBetterDiscordInstall()
+		if err != nil {
+			return err
+		}
+		if err := install.RemoveAll(); err != nil {
+			return err
+		}
+		output.Blank()
 	}
-	output.Blank()
+
+	// Only relaunch what we stopped: if Discord wasn't running we leave it closed.
+	if options.RestartDiscord && wasRunning {
+		output.Printf("🔄 Restarting %s...\n", discord.Channel.Name())
+		if err := discord.start(exe); err != nil {
+			return err
+		}
+		output.Blank()
+	}
 
 	return nil
 }
 
-// RepairBD repairs BetterDiscord for this Discord installation
-func (discord *DiscordInstall) RepairBD() error {
-	if err := discord.UninstallBD(); err != nil {
+// RepairBD repairs BetterDiscord for this Discord installation. It reverts the
+// injection and cleans the requested data files, leaving BetterDiscord
+// uninstalled; the caller then offers to reinstall.
+func (discord *DiscordInstall) RepairBD(options models.RepairOptions) error {
+	// Reject Snap before stop() so an unsupported install isn't needlessly killed.
+	if err := discord.errIfSnap(); err != nil {
 		return err
 	}
 
-	// Gets the global BetterDiscord install
-	bd := betterdiscord.GetInstallation()
+	// Discord locks app.asar while running; stop it before reverting the injection.
+	exe, wasRunning, err := discord.stop()
+	if err != nil {
+		return err
+	}
+	output.Blank()
 
-	// Snaps and flatpaks get their own local BD install
-	if discord.IsFlatpak || discord.IsSnap {
-		segment := "config"
-		if discord.IsSnap {
-			segment = ".config"
-		}
+	output.Println("🧹 Removing injection...")
+	if err := discord.uninject(); err != nil {
+		return err
+	}
+	output.Blank()
 
-		configPath, err := utils.FindSegment(discord.CorePath, segment)
-		if err != nil {
-			return err
-		}
-		bd = betterdiscord.GetInstallation(configPath)
+	bd, err := discord.GetBetterDiscordInstall()
+	if err != nil {
+		return err
 	}
 
 	if err := bd.Repair(discord.Channel); err != nil {
 		return err
 	}
+	output.Blank()
+
+	// Repair leaves Discord uninjected. If it was running, relaunch it (vanilla)
+	// so the user isn't left with a closed client; if they then accept the
+	// reinstall prompt, that flow stops and re-injects it.
+	if wasRunning {
+		output.Printf("🔄 Restarting %s...\n", discord.Channel.Name())
+		if err := discord.start(exe); err != nil {
+			return err
+		}
+		output.Blank()
+	}
 
 	return nil
 }
 
-func (discord *DiscordInstall) GetBetterDiscordInstall() *betterdiscord.BDInstall {
+func (discord *DiscordInstall) GetBetterDiscordInstall() (*betterdiscord.BDInstall, error) {
 	// Gets the global BetterDiscord install
 	bd := betterdiscord.GetInstallation()
 
-	// Snaps and flatpaks get their own local BD install
-	if discord.IsSnap || discord.IsFlatpak {
-		segment := "config"
-		if discord.IsSnap {
-			segment = ".config"
-		}
-
-		configPath, err := utils.FindSegment(discord.CorePath, segment)
+	// Flatpaks get their own local BD folder. The resources path is in the
+	// read-only deployment tree, so we can't derive the sandbox config from it;
+	// instead we compute the stable ~/.var/app/{id}/config location from the
+	// channel. Inside the sandbox this dir is the app's $XDG_CONFIG_HOME, which
+	// is exactly where the injected index.js looks for BetterDiscord at runtime.
+	if discord.IsFlatpak {
+		home, err := os.UserHomeDir()
 		if err != nil {
-			return nil
+			return nil, err
 		}
+		id := "com.discordapp." + strings.ReplaceAll(discord.Channel.Name(), " ", "")
+		configPath := filepath.Join(home, ".var", "app", id, "config")
 		bd = betterdiscord.GetInstallation(configPath)
 	}
 
-	return bd
+	return bd, nil
 }

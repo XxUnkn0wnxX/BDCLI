@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/betterdiscord/cli/internal/models"
+	"github.com/betterdiscord/cli/internal/utils"
 )
 
 var searchPaths []string
@@ -28,7 +29,7 @@ func GetAllInstalls() map[models.DiscordChannel][]*DiscordInstall {
 }
 
 func GetVersion(proposed string) string {
-	for folder := range strings.SplitSeq(proposed, string(filepath.Separator)) {
+	for folder := range strings.SplitSeq(filepath.ToSlash(proposed), "/") {
 		if version := versionRegex.FindString(folder); version != "" {
 			return version
 		}
@@ -37,9 +38,25 @@ func GetVersion(proposed string) string {
 }
 
 func GetChannel(proposed string) models.DiscordChannel {
-	for folder := range strings.SplitSeq(proposed, string(filepath.Separator)) {
+	// Iterate from the leaf toward the root: the channel identifier always sits
+	// closest to the leaf (e.g. `.../discordcanary/app-x/resources`), so scanning
+	// backwards avoids false matches on a parent segment that happens to contain a
+	// channel name (e.g. a home dir at `/home/discord`).
+	// Normalize to forward slashes before splitting so a Windows path that mixes
+	// separators (backslashes and forward slashes, which the OS treats
+	// interchangeably) still segments cleanly.
+	segments := strings.Split(filepath.ToSlash(proposed), "/")
+
+	for _, segment := range slices.Backward(segments) {
+		// Normalize the segment so macOS bundle names ("Discord Canary.app") and
+		// flatpak channel dirs ("discord-canary") both match the channel names
+		// ("discordcanary").
+		normalized := strings.ToLower(segment)
+		normalized = strings.TrimSuffix(normalized, ".app")
+		normalized = strings.ReplaceAll(normalized, " ", "")
+		normalized = strings.ReplaceAll(normalized, "-", "")
 		for _, channel := range models.Channels {
-			if strings.ToLower(folder) == strings.ReplaceAll(strings.ToLower(channel.Name()), " ", "") {
+			if normalized == strings.ReplaceAll(strings.ToLower(channel.Name()), " ", "") {
 				return channel
 			}
 		}
@@ -49,7 +66,7 @@ func GetChannel(proposed string) models.DiscordChannel {
 
 func GetSuggestedPath(channel models.DiscordChannel) string {
 	if len(allDiscordInstalls[channel]) > 0 {
-		return allDiscordInstalls[channel][0].CorePath
+		return allDiscordInstalls[channel][0].ResourcesPath
 	}
 	return ""
 }
@@ -61,7 +78,7 @@ func AddCustomPath(proposed string) *DiscordInstall {
 	}
 
 	// Check if this already exists in our list and return reference
-	index := slices.IndexFunc(allDiscordInstalls[result.Channel], func(d *DiscordInstall) bool { return d.CorePath == result.CorePath })
+	index := slices.IndexFunc(allDiscordInstalls[result.Channel], func(d *DiscordInstall) bool { return d.ResourcesPath == result.ResourcesPath })
 	if index >= 0 {
 		return allDiscordInstalls[result.Channel][index]
 	}
@@ -75,7 +92,7 @@ func AddCustomPath(proposed string) *DiscordInstall {
 
 func ResolvePath(proposed string) *DiscordInstall {
 	for channel := range allDiscordInstalls {
-		index := slices.IndexFunc(allDiscordInstalls[channel], func(d *DiscordInstall) bool { return d.CorePath == proposed })
+		index := slices.IndexFunc(allDiscordInstalls[channel], func(d *DiscordInstall) bool { return d.ResourcesPath == proposed })
 		if index >= 0 {
 			return allDiscordInstalls[channel][index]
 		}
@@ -88,13 +105,9 @@ func ResolvePath(proposed string) *DiscordInstall {
 func sortInstalls() {
 	for channel := range allDiscordInstalls {
 		slices.SortFunc(allDiscordInstalls[channel], func(a, b *DiscordInstall) int {
-			switch {
-			case a.Version > b.Version:
-				return -1
-			case b.Version > a.Version:
-				return 1
-			}
-			return 0
+			// Descending (highest version first) with a numeric compare so
+			// e.g. 1.0.10000 sorts above 1.0.9999.
+			return utils.CompareVersions(b.Version, a.Version)
 		})
 	}
 }

@@ -54,7 +54,7 @@ var discoverInstallsCmd = &cobra.Command{
 				if inst.IsInjected() {
 					bdStatus = "yes"
 				}
-				fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\n", ch.Name(), inst.Version, typeLabel, bdStatus, inst.CorePath)
+				fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\n", ch.Name(), inst.Version, typeLabel, bdStatus, inst.ResourcesPath)
 			}
 		}
 

@@ -253,7 +253,7 @@ func BenchmarkParseJSDoc(b *testing.B) {
  * @version 1.0.0
  */
 `
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		parseJSDoc(input)
 	}
 }
