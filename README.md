@@ -32,6 +32,8 @@ It installs, removes, updates, and inspects BetterDiscord for supported macOS Di
 
 - Easy installation and uninstallation of BetterDiscord.
 - Support for Discord Stable, PTB, and Canary.
+- Automatically stops and restarts Discord during install and uninstall.
+- Optional BetterDiscord development builds through `bdcli install --dev`.
 - Discovery for Discord installs, suggested paths, and BetterDiscord addons.
 - Plugin and theme management commands.
 - BetterDiscord store browsing and lookup commands.
@@ -126,6 +128,10 @@ Use `bdcli [command] --help` for command-specific flags and examples.
 bdcli install --channel stable
 bdcli install --channel ptb
 bdcli install --channel canary
+
+# Install the BetterDiscord development build (install-only)
+bdcli install --dev
+BDCLI_DEV_BUILD=1 bdcli install
 
 bdcli update
 bdcli update --check
@@ -226,6 +232,24 @@ No. This fork tracks useful upstream CLI fixes while preserving a macOS 11 Big S
 ### Why is Go pinned to 1.24.x?
 
 The fork uses a lower Go toolchain to keep the local Big Sur build path working on older Intel Macs.
+
+### Do I need to close Discord before installing or uninstalling?
+
+No. The CLI stops Discord before modifying its application files and restarts it afterward when it was already running. `bdcli update` only replaces the BetterDiscord asar, so restart Discord manually after an update.
+
+### How do I install the BetterDiscord development build?
+
+Use the install-only `--dev` flag, or set `BDCLI_DEV_BUILD=1`:
+
+```bash
+bdcli install --dev
+```
+
+This downloads BetterDiscord's rolling `canary` prerelease and is unrelated to the Discord Canary channel. `bdcli update` continues to track the stable BetterDiscord release; rerun `bdcli install --dev` to refresh a development build.
+
+### What happens to installations made by an older fork build?
+
+Earlier releases injected through `discord_desktop_core/index.js`. The current CLI recognizes the exact historical fork loader, restores the original core entry point, and then uses the safer `app.asar` shadow layout adopted from upstream. Unknown or customized core loaders are left untouched.
 
 ### Where do release binaries come from?
 

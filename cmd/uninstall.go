@@ -90,11 +90,11 @@ var uninstallCmd = &cobra.Command{
 			}
 		}
 
-		if err := install.UninstallBD(); err != nil {
+		if err := install.UninstallBD(models.UninstallOptions{FullUninstall: false, RestartDiscord: true}); err != nil {
 			return fmt.Errorf("uninstallation failed: %w", err)
 		}
 
-		output.Printf("✅ BetterDiscord uninstalled from %s\n", path.Dir(install.CorePath))
+		output.Printf("✅ BetterDiscord uninstalled from %s\n", path.Dir(install.ResourcesPath))
 		return nil
 	},
 }
@@ -105,7 +105,7 @@ func getAllInstalls() []*discord.DiscordInstall {
 	seen := map[string]bool{}
 	var installs []*discord.DiscordInstall
 
-	// Flatten the map of installs and filter out duplicates based on CorePath
+	// Flatten the map of installs and filter out duplicates based on ResourcesPath
 	// Honestly, probably should have just returned a flat list from GetAllInstalls in the first place, but whatever
 	// And also the chance of actually having duplicates is pretty much zero, but this is just in case
 	// If you are reading this and you do have duplicates, please tell me because that would be very interesting and I would like to know how that happened
@@ -115,10 +115,10 @@ func getAllInstalls() []*discord.DiscordInstall {
 			if inst == nil {
 				continue
 			}
-			if seen[inst.CorePath] {
+			if seen[inst.ResourcesPath] {
 				continue
 			}
-			seen[inst.CorePath] = true
+			seen[inst.ResourcesPath] = true
 			installs = append(installs, inst)
 		}
 	}
@@ -129,11 +129,11 @@ func getAllInstalls() []*discord.DiscordInstall {
 func uninstallAll(installs []*discord.DiscordInstall) error {
 	var firstErr error
 	for _, inst := range installs {
-		if err := inst.UninstallBD(); err != nil {
+		if err := inst.UninstallBD(models.UninstallOptions{FullUninstall: false, RestartDiscord: true}); err != nil {
 			if firstErr == nil {
 				firstErr = err
 			}
-			output.Printf("❌ Failed to uninstall from %s\n", path.Dir(inst.CorePath))
+			output.Printf("❌ Failed to uninstall from %s\n", path.Dir(inst.ResourcesPath))
 			output.Printf("   %s\n", err.Error())
 		}
 	}
@@ -148,8 +148,8 @@ func removeAllBetterDiscord(installs []*discord.DiscordInstall) error {
 	// so we need to filter them out to avoid trying to delete the same
 	// folder multiple times
 	for _, inst := range installs {
-		bd := inst.GetBetterDiscordInstall()
-		if bd == nil {
+		bd, err := inst.GetBetterDiscordInstall()
+		if err != nil || bd == nil {
 			continue
 		}
 		roots[bd.Root()] = bd

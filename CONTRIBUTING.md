@@ -36,9 +36,13 @@ task build
 Before opening a pull request:
 
 1. Rebase or merge from the current `develop` branch.
-2. Run `go test ./...`.
+2. Run `gofmt`, `go vet ./...`, and `go test ./...`.
 3. Confirm `go.mod`, workflow files, and release config still preserve the fork's Go pin and macOS Big Sur focus.
 4. Keep changes scoped to the bug fix, upstream sync, or feature being proposed.
+
+## AI-assisted contributions
+
+AI tools are welcome, but their output still needs human review. Review every changed line, run the required checks locally, and disclose meaningful AI involvement in the pull request description. If an autonomous agent produced output with minimal human review, state that explicitly so maintainers can calibrate their review.
 
 ## Style
 

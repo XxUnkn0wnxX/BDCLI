@@ -51,9 +51,10 @@ func (i *BDInstall) HasDownloaded() bool {
 	return i.hasDownloaded
 }
 
-// Download downloads the BetterDiscord asar file
-func (i *BDInstall) Download() error {
-	return i.download()
+// Download downloads the BetterDiscord asar file. When useDevBuild is true it
+// pulls the rolling "canary" pre-release from GitHub instead of the stable asar.
+func (i *BDInstall) Download(useDevBuild bool) error {
+	return i.download(useDevBuild)
 }
 
 // Prepare creates all necessary directories for BetterDiscord
